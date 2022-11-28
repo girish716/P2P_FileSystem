@@ -12,12 +12,14 @@ import java.util.*;
 public class MasterQuery extends UnicastRemoteObject implements Master
 {
     private HashMap<String, Set<String>> lookup;
+    private List<String> peers;
     // Default constructor to throw RemoteException
     // from its parent constructor
     MasterQuery() throws RemoteException
     {
         super();
         lookup = new HashMap<>();
+        peers = new ArrayList<>();
 
     }
 
@@ -41,6 +43,24 @@ public class MasterQuery extends UnicastRemoteObject implements Master
 
 
     /**
+     * @return
+     * @throws IOException
+     */
+    @Override
+    public String getPath() throws IOException{
+        try {
+            Random rand = new Random();
+            // Generate random integers in range 0 to length of peers list
+            int randIndex = rand.nextInt(peers.size());
+            return peers.get(randIndex);
+        } catch (Exception io) {
+            io.printStackTrace();
+        }
+        return null;
+    }
+
+
+    /**
      * @param filename
      * @return
      * @throws RemoteException
@@ -57,6 +77,24 @@ public class MasterQuery extends UnicastRemoteObject implements Master
             io.printStackTrace();
         }
         return new ArrayList<String>();
+    }
+
+    /**
+     * @param peerData
+     * @return
+     * @throws IOException
+     */
+    @Override
+    public boolean registerPeer(String peerData) throws IOException{
+        try {
+            if(peerData!=null && peerData!="") {
+                peers.add(peerData);
+                return true;
+            }
+        } catch (Exception io){
+            io.printStackTrace();
+        }
+        return false;
     }
 
     /**
