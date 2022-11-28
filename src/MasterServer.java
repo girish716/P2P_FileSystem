@@ -1,21 +1,21 @@
 import java.rmi.Naming;
 import java.rmi.registry.LocateRegistry;
 
-public class PeerServer {
+public class MasterServer {
     public static void main(String args[]) {
         try
         {
             // Create an object of the interface
             // implementation class
-            FDS obj = new FDSQuery();
+            Master obj = new MasterQuery();
 
             // rmiregistry within the server JVM with
-            // port number 1900
-            LocateRegistry.createRegistry(1900);
+            // port number 1901
+            LocateRegistry.createRegistry(1901);
 
             // Binds the remote object by the name
             // geeksforgeeks
-            Naming.rebind("rmi://10.0.0.10:1900/master",obj);
+            Naming.rebind("rmi://10.0.0.10:1901/master",obj);
         }
         catch(Exception ae)
         {
