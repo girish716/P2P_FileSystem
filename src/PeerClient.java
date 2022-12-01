@@ -73,7 +73,34 @@ public class PeerClient {
         catch(Exception e){
             System.out.println(e);
         }
+    }
+    public void deleteFile(Master masterServer, String fileName){
+        try{
+            if(!masterServer.hasFile(fileName)){
+                System.out.println("File not available....");
+                return;
+            }
+            List<String> paths = masterServer.getPaths(fileName);
+            String peerPath = paths.get(0);
 
+            // connect with server
+            FDS peerServer =
+                    (FDS)Naming.lookup("rmi://"+peerPath+"/master");
+            peerServer.delete(fileName);
+            masterServer.deleteFile(fileName);
+        }
+        catch (Exception e){
+            System.out.println(e);
+        }
+    }
+
+    public void restoreFile(Master masterServer, String fileName){
+        try{
+
+        }
+        catch (Exception e){
+            System.out.println(e);
+        }
     }
 
     public static void main(String args[]) {

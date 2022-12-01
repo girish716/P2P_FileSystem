@@ -13,6 +13,8 @@ public class MasterQuery extends UnicastRemoteObject implements Master
 {
     private HashMap<String, Set<String>> lookup;
     private List<String> peers;
+
+    
     // Default constructor to throw RemoteException
     // from its parent constructor
     MasterQuery() throws RemoteException
@@ -93,6 +95,30 @@ public class MasterQuery extends UnicastRemoteObject implements Master
             }
         } catch (Exception io){
             io.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean deleteFile(String fileName) throws IOException {
+        try{
+            if(lookup.remove(fileName)!=null){
+                return true;
+            }
+        }
+        catch (Exception e){
+            System.out.println(e);
+        }
+        return false;
+    }
+
+    @Override
+    public boolean restoreFile(String fileName) throws IOException {
+        try{
+
+        }
+        catch (Exception e){
+            System.out.println(e);
         }
         return false;
     }
