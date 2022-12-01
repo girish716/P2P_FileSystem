@@ -26,7 +26,7 @@ public class FDSQuery extends UnicastRemoteObject implements FDS
     @Override
     public String read(String filename) throws RemoteException{
         try {
-            Files.readString(Path.of(filename));
+            return Files.readString(Path.of(filename));
         } catch (IOException io){
             io.printStackTrace();
         }

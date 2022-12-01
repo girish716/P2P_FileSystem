@@ -8,5 +8,5 @@ public interface Master extends Remote{
     public List<String> getPaths(String filename) throws RemoteException;
     public String getPath() throws IOException;
     public boolean registerPeer(String peerData) throws IOException;
-    public String notifyMaster(String path, String filename) throws RemoteException;
+    public String updateCache(String path, String filename) throws RemoteException;
 }

@@ -104,7 +104,7 @@ public class MasterQuery extends UnicastRemoteObject implements Master
      * @throws RemoteException
      */
     @Override
-    public String notifyMaster(String path, String filename) throws RemoteException{
+    public String updateCathe(String path, String filename) throws RemoteException{
         try {
             Set<String> paths;
             if(lookup.containsKey(filename)){

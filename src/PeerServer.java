@@ -4,9 +4,9 @@ import java.rmi.registry.LocateRegistry;
 public class PeerServer {
     public static void main(String args[]) {
         Integer masterPORT = 1901;
-        String masterIP = "localhost";
+        String masterIP = "10.200.57.66";
         Integer serverPORT = 1900;
-        String serverIP = "localhost";
+        String serverIP = "10.200.57.66";
 
         try
         {
