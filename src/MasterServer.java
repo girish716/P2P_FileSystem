@@ -15,7 +15,7 @@ public class MasterServer {
 
             // Binds the remote object by the name
             // geeksforgeeks
-            Naming.rebind("rmi://10.200.57.66:1901/master",obj);
+            Naming.rebind("rmi://10.200.5.190:1901/master",obj);
         }
         catch(Exception ae)
         {

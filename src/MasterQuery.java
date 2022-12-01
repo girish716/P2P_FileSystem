@@ -14,7 +14,8 @@ public class MasterQuery extends UnicastRemoteObject implements Master
     private HashMap<String, Set<String>> lookup;
     private List<String> peers;
 
-    
+    private HashMap<String, Set<String>> bin;
+
     // Default constructor to throw RemoteException
     // from its parent constructor
     MasterQuery() throws RemoteException
@@ -22,6 +23,7 @@ public class MasterQuery extends UnicastRemoteObject implements Master
         super();
         lookup = new HashMap<>();
         peers = new ArrayList<>();
+        bin = new HashMap<>();
 
     }
 
@@ -102,7 +104,9 @@ public class MasterQuery extends UnicastRemoteObject implements Master
     @Override
     public boolean deleteFile(String fileName) throws IOException {
         try{
-            if(lookup.remove(fileName)!=null){
+            Set<String> removedFilePaths = lookup.remove(fileName);
+            if(removedFilePaths!=null){
+                bin.put(fileName, removedFilePaths);
                 return true;
             }
         }
@@ -115,7 +119,11 @@ public class MasterQuery extends UnicastRemoteObject implements Master
     @Override
     public boolean restoreFile(String fileName) throws IOException {
         try{
-
+            Set<String> restoreFilePaths = bin.remove(fileName);
+            if(restoreFilePaths!=null){
+                lookup.put(fileName, restoreFilePaths);
+                return true;
+            }
         }
         catch (Exception e){
             System.out.println(e);

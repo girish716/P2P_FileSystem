@@ -9,9 +9,9 @@ public class PeerClient {
 
     PeerClient(){
         this.masterPORT = 1901;
-        this.masterIP = "localhost";
+        this.masterIP = "10.200.5.190";
         this.port = 1900;
-        this.IP = "localhost";
+        this.IP = "10.200.5.190";
     }
 
     public void createFile(Master masterServer){
@@ -44,7 +44,7 @@ public class PeerClient {
 
             // connect with server
             FDS peerServer =
-                    (FDS)Naming.lookup("rmi://"+peerPath+"/master");
+                    (FDS)Naming.lookup(peerPath);
             String fileData = peerServer.read(fileName);
             if(fileData==null){
                 System.out.println("Failed to read file......");
@@ -65,10 +65,11 @@ public class PeerClient {
 
             // connect with server
             FDS peerServer =
-                    (FDS)Naming.lookup("rmi://"+peerPath+"/master");
+                    (FDS)Naming.lookup(peerPath);
             String fileData = peerServer.read(fileName);
             String newData = fileData + updatedData;
-            peerServer.update(fileName, newData);
+            String updatedFileData = peerServer.update(fileName, newData);
+            System.out.println("Updated file data - "+updatedFileData);
         }
         catch(Exception e){
             System.out.println(e);
@@ -85,9 +86,10 @@ public class PeerClient {
 
             // connect with server
             FDS peerServer =
-                    (FDS)Naming.lookup("rmi://"+peerPath+"/master");
+                    (FDS)Naming.lookup(peerPath);
             peerServer.delete(fileName);
             masterServer.deleteFile(fileName);
+            System.out.println("successfully deleted - "+ fileName);
         }
         catch (Exception e){
             System.out.println(e);
@@ -96,7 +98,16 @@ public class PeerClient {
 
     public void restoreFile(Master masterServer, String fileName){
         try{
+            if(masterServer.restoreFile(fileName)){
+                List<String> paths = masterServer.getPaths(fileName);
+                String peerPath = paths.get(0);
 
+                // connect with server
+                FDS peerServer =
+                        (FDS)Naming.lookup(peerPath);
+                peerServer.restore(fileName);
+                System.out.println("restore completed for - "+ fileName);
+            }
         }
         catch (Exception e){
             System.out.println(e);
@@ -115,6 +126,9 @@ public class PeerClient {
             System.out.println(masterAccess);
             // create
             clientServer.createFile(masterAccess);
+            clientServer.readFile(masterAccess, "abc.txt");
+            clientServer.deleteFile(masterAccess, "abc.txt");
+            clientServer.restoreFile(masterAccess, "abc.txt");
         }
         catch(Exception ae)
         {

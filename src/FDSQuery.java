@@ -72,11 +72,11 @@ public class FDSQuery extends UnicastRemoteObject implements FDS
         if(isDeleted.containsKey(filename) && !isDeleted.get(filename)){
             try {
                 Files.write(Paths.get("myfile.txt"), "the text".getBytes(), StandardOpenOption.APPEND);
+                return Files.readString(Path.of(filename));
             }catch (IOException e) {
                 e.printStackTrace();
             }
         }
-
         return null;
     }
 
