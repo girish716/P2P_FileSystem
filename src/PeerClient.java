@@ -1,17 +1,28 @@
 import java.rmi.Naming;
 import java.util.*;
+import java.io.FileInputStream;
+import java.io.IOException;
+
 
 public class PeerClient {
-    Integer masterPORT;
+    String masterPORT;
     String masterIP;
-    Integer port;
-    String IP;
+    String serverPORT;
+    String serverIP;
 
     PeerClient(){
-        this.masterPORT = 1901;
-        this.masterIP = "10.200.5.190";
-        this.port = 1900;
-        this.IP = "10.200.5.190";
+        try{
+            Properties prop = new Properties();
+            prop.load(new FileInputStream("config.properties"));
+            //Reading each property value
+            this.masterPORT = prop.getProperty("MASTER_PORT");
+            this.masterIP = prop.getProperty("MASTER_IP");
+            this.serverPORT = prop.getProperty("SERVER_port");
+            this.serverIP = prop.getProperty("SERVER_IP");
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
     public void createFile(Master masterServer){
@@ -20,11 +31,11 @@ public class PeerClient {
             String peerData = masterServer.getPath();
             // lookup method to find reference of remote object
             FDS peerServer =
-                    (FDS)Naming.lookup("rmi://"+peerData+"/master");
+                    (FDS)Naming.lookup("rmi://"+peerData);
             String response = peerServer.create("abc.txt", "Hello world");
             System.out.println("File Successfully created....");
             if(response!=null){
-                masterServer.updateCache("rmi://"+this.IP+":"+this.port+"/master", response);
+                masterServer.updateCache("rmi://"+this.serverIP+":"+this.serverPORT, response);
                 List<String> paths = masterServer.getPaths(response);
                 System.out.println(paths);
             }
@@ -122,13 +133,14 @@ public class PeerClient {
             PeerClient clientServer = new PeerClient();
 
             Master masterAccess =
-                    (Master)Naming.lookup("rmi://"+clientServer.masterIP+":"+clientServer.masterPORT+"/master");
+                    (Master)Naming.lookup("rmi://"+clientServer.masterIP+":"+clientServer.masterPORT);
             System.out.println(masterAccess);
             // create
             clientServer.createFile(masterAccess);
             clientServer.readFile(masterAccess, "abc.txt");
             clientServer.deleteFile(masterAccess, "abc.txt");
             clientServer.restoreFile(masterAccess, "abc.txt");
+            clientServer.updateFile(masterAccess, "abc.txt", " - updated");
         }
         catch(Exception ae)
         {

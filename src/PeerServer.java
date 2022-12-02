@@ -1,17 +1,29 @@
 import java.rmi.Naming;
 import java.rmi.registry.LocateRegistry;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
 
 public class PeerServer {
     public static void main(String args[]) {
-        Integer masterPORT = 1901;
-        String masterIP = "10.200.5.190";
-        Integer serverPORT = 1900;
-        String serverIP = "10.200.5.190";
+        String masterPORT;
+        String masterIP;
+        String serverPORT;
+        String serverIP;
 
         try
         {
+            Properties prop = new Properties();
+            prop.load(new FileInputStream("config.properties"));
+            //Reading each property value
+            masterPORT = prop.getProperty("MASTER_PORT");
+            masterIP = prop.getProperty("MASTER_IP");
+            serverPORT = prop.getProperty("SERVER_port");
+            serverIP = prop.getProperty("SERVER_IP");
+
+
             Master masterAccess =
-                    (Master)Naming.lookup("rmi://"+masterIP+":"+masterPORT+"/master");
+                    (Master)Naming.lookup("rmi://"+masterIP+":"+masterPORT);
 
             // registers the user in Master server
             if(masterAccess.registerPeer(serverIP+":"+serverPORT)){
@@ -25,11 +37,11 @@ public class PeerServer {
 
             // rmiregistry within the server JVM with
             // port number 1900
-            LocateRegistry.createRegistry(1900);
+            LocateRegistry.createRegistry(Integer.parseInt(serverPORT));
 
             // Binds the remote object by the name
             // geeksforgeeks
-            Naming.rebind("rmi://"+serverIP+":"+serverPORT+"/master",obj);
+            Naming.rebind("rmi://"+serverIP+":"+serverPORT,obj);
         }
         catch(Exception ae)
         {
