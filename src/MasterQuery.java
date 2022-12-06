@@ -1,7 +1,3 @@
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Properties;
 import java.io.IOException;
 import java.rmi.*;
 import java.rmi.server.*;
@@ -10,10 +6,12 @@ import java.util.*;
 
 public class MasterQuery extends UnicastRemoteObject implements Master
 {
-    private HashMap<String, Set<String>> lookup;
-    private List<String> peers;
-
-    private HashMap<String, Set<String>> bin;
+    // lookup : Filename -> List of peers containing that file
+    private Map<String, Set<String>> lookup;
+    // peers : Stores all the registered peers
+    private Set<String> peers;
+    // bin : to store what all files are deleted
+    private Map<String, Boolean> isDeleted;
 
     // Default constructor to throw RemoteException
     // from its parent constructor
@@ -21,8 +19,8 @@ public class MasterQuery extends UnicastRemoteObject implements Master
     {
         super();
         lookup = new HashMap<>();
-        peers = new ArrayList<>();
-        bin = new HashMap<>();
+        peers = new HashSet<>();
+        isDeleted = new HashMap<>();
 
     }
 
@@ -34,8 +32,8 @@ public class MasterQuery extends UnicastRemoteObject implements Master
     @Override
     public boolean hasFile(String filename) throws RemoteException{
         try {
-            if(lookup.containsKey(filename)){
-                System.out.println("master has file "+ filename);
+            if(lookup.containsKey(filename) && !isDeleted.get(filename)){
+                System.out.println("Master has "+ filename);
                 return true;
             }
         } catch (Exception io){
@@ -52,10 +50,15 @@ public class MasterQuery extends UnicastRemoteObject implements Master
     @Override
     public String getPath() throws IOException{
         try {
-            Random rand = new Random();
-            // Generate random integers in range 0 to length of peers list
-            int randIndex = rand.nextInt(peers.size());
-            return peers.get(randIndex);
+            int size = peers.size();
+            int item = new Random().nextInt(size); // In real life, the Random object should be rather more shared than this
+            int i = 0;
+            for(String peer : peers)
+            {
+                if (i == item)
+                    return peer;
+                i++;
+            }
         } catch (Exception io) {
             io.printStackTrace();
         }
@@ -79,7 +82,7 @@ public class MasterQuery extends UnicastRemoteObject implements Master
         } catch (Exception io){
             io.printStackTrace();
         }
-        return new ArrayList<String>();
+        return null;
     }
 
     /**
@@ -88,26 +91,28 @@ public class MasterQuery extends UnicastRemoteObject implements Master
      * @throws IOException
      */
     @Override
-    public boolean registerPeer(String peerData) throws IOException{
+    public int registerPeer(String peerData) throws IOException{
         try {
             if(peerData!=null && peerData!="") {
-                peers.add(peerData);
-                return true;
+                if(!peers.contains(peerData)){
+                    peers.add(peerData);
+                    return 1;
+                } else {
+                    return 0;
+                }
+
             }
         } catch (Exception io){
             io.printStackTrace();
         }
-        return false;
+        return -1;
     }
 
     @Override
     public boolean deleteFile(String fileName) throws IOException {
         try{
-            Set<String> removedFilePaths = lookup.remove(fileName);
-            if(removedFilePaths!=null){
-                bin.put(fileName, removedFilePaths);
-                return true;
-            }
+            isDeleted.put(fileName, true);
+            return true;
         }
         catch (Exception e){
             System.out.println(e);
@@ -118,11 +123,8 @@ public class MasterQuery extends UnicastRemoteObject implements Master
     @Override
     public boolean restoreFile(String fileName) throws IOException {
         try{
-            Set<String> restoreFilePaths = bin.remove(fileName);
-            if(restoreFilePaths!=null){
-                lookup.put(fileName, restoreFilePaths);
-                return true;
-            }
+            isDeleted.put(fileName, false);
+            return true;
         }
         catch (Exception e){
             System.out.println(e);
@@ -149,7 +151,8 @@ public class MasterQuery extends UnicastRemoteObject implements Master
                 paths.add(path);
             }
             lookup.put(filename, paths);
-            System.out.println("Successfully notified master.....");
+            isDeleted.put(filename, false);
+            System.out.println(filename + " updated in the lookup table");
         } catch (Exception io){
             io.printStackTrace();
         }

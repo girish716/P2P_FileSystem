@@ -14,7 +14,7 @@ public class MasterServer {
             Properties prop = new Properties();
             //ResourceBundle prop
                   //  = ResourceBundle.getBundle("config.properties");
-            prop.load(new FileInputStream("resources/config.properties"));
+            prop.load(new FileInputStream("../resources/config.properties"));
             //Reading each property value
             masterPORT = prop.getProperty("MASTER_PORT");
             masterIP = prop.getProperty("MASTER_IP");
@@ -29,7 +29,7 @@ public class MasterServer {
 
             // Binds the remote object by the name
             // geeksforgeeks
-            Naming.rebind("rmi://"+masterIP+":"+masterPORT,obj);
+            Naming.rebind("rmi://"+masterIP+":"+masterPORT+"/master",obj);
         }
         catch(Exception ae)
         {

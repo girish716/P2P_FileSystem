@@ -6,42 +6,47 @@ import java.util.Properties;
 
 public class PeerServer {
     public static void main(String args[]) {
-        String masterPORT;
+        String masterPort;
         String masterIP;
-        String serverPORT;
-        String serverIP;
+        String myPort;
+        String myIP;
 
         try
         {
             Properties prop = new Properties();
-            prop.load(new FileInputStream("config.properties"));
+            prop.load(new FileInputStream("../resources/config.properties"));
+
             //Reading each property value
-            masterPORT = prop.getProperty("MASTER_PORT");
+            masterPort = prop.getProperty("MASTER_PORT");
             masterIP = prop.getProperty("MASTER_IP");
-            serverPORT = prop.getProperty("SERVER_port");
-            serverIP = prop.getProperty("SERVER_IP");
+            myPort = prop.getProperty("SERVER_PORT");
+            myIP = prop.getProperty("SERVER_IP");
 
 
             Master masterAccess =
-                    (Master)Naming.lookup("rmi://"+masterIP+":"+masterPORT);
+                    (Master)Naming.lookup("rmi://"+masterIP+":"+masterPort+"/master");
+
+            int response = masterAccess.registerPeer("rmi://"+myIP+":"+myPort+"/peer");
 
             // registers the user in Master server
-            if(masterAccess.registerPeer(serverIP+":"+serverPORT)){
-                System.out.println("Server registred with Master");
-            }else{
-                System.out.println("Server not registred with Master");
+            if(response == 1){
+                System.out.println("Peer Server Registered Successfully");
+            }else if(response == 0){
+                System.out.println("Peer Server Already Registered");
+            } else {
+                System.out.println("Peer Server Couldn't be registered");
             }
+
             // Create an object of the interface
             // implementation class
             FDS obj = new FDSQuery();
 
             // rmiregistry within the server JVM with
-            // port number 1900
-            LocateRegistry.createRegistry(Integer.parseInt(serverPORT));
+            System.out.println("port:"+myPort);
+            LocateRegistry.createRegistry(Integer.parseInt(myPort));
 
             // Binds the remote object by the name
-            // geeksforgeeks
-            Naming.rebind("rmi://"+serverIP+":"+serverPORT,obj);
+            Naming.rebind("rmi://"+myIP+":"+myPort+"/peer",obj);
         }
         catch(Exception ae)
         {
