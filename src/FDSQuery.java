@@ -52,7 +52,7 @@ public class FDSQuery extends UnicastRemoteObject implements FDS
             isDeleted.put(filename, false);
             myWriter.write(data);
             myWriter.close();
-            System.out.println("Successfully wrote to the file.");
+            System.out.println("Successfully created " + filename);
             return filename;
         } catch (IOException io) {
             io.printStackTrace();
@@ -71,7 +71,7 @@ public class FDSQuery extends UnicastRemoteObject implements FDS
     public String update(String filename, String data) throws RemoteException {
         if(isDeleted.containsKey(filename) && !isDeleted.get(filename)){
             try {
-                Files.write(Paths.get("myfile.txt"), "the text".getBytes(), StandardOpenOption.APPEND);
+                Files.write(Paths.get(filename), data.getBytes(), StandardOpenOption.APPEND);
                 return Files.readString(Path.of(filename));
             }catch (IOException e) {
                 e.printStackTrace();

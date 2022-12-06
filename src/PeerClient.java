@@ -13,11 +13,11 @@ public class PeerClient {
     PeerClient(){
         try{
             Properties prop = new Properties();
-            prop.load(new FileInputStream("config.properties"));
+            prop.load(new FileInputStream("../resources/config.properties"));
             //Reading each property value
             this.masterPORT = prop.getProperty("MASTER_PORT");
             this.masterIP = prop.getProperty("MASTER_IP");
-            this.serverPORT = prop.getProperty("SERVER_port");
+            this.serverPORT = prop.getProperty("SERVER_PORT");
             this.serverIP = prop.getProperty("SERVER_IP");
         }
         catch(Exception e){
@@ -25,21 +25,20 @@ public class PeerClient {
         }
     }
 
-    public void createFile(Master masterServer){
+    public void createFile(Master masterServer, String fileName, String fileData){
         try{
             //fetch IP and PORT of random peer
             String peerData = masterServer.getPath();
             // lookup method to find reference of remote object
             FDS peerServer =
-                    (FDS)Naming.lookup("rmi://"+peerData);
-            String response = peerServer.create("abc.txt", "Hello world");
-            System.out.println("File Successfully created....");
+                    (FDS)Naming.lookup(peerData);
+            String response = peerServer.create(fileName, fileData);
+            System.out.println("Successfully created " + fileName);
             if(response!=null){
-                masterServer.updateCache("rmi://"+this.serverIP+":"+this.serverPORT, response);
+                masterServer.updateCache("rmi://" + this.serverIP+":"+this.serverPORT + "/peer", response);
                 List<String> paths = masterServer.getPaths(response);
                 System.out.println(paths);
             }
-            System.out.println(response);
         }
         catch(Exception e){
             System.out.println(e);
@@ -127,24 +126,90 @@ public class PeerClient {
 
     public static void main(String args[]) {
         String response;
+        int userInput;
 
         try
         {
             PeerClient clientServer = new PeerClient();
 
             Master masterAccess =
-                    (Master)Naming.lookup("rmi://"+clientServer.masterIP+":"+clientServer.masterPORT);
+                    (Master)Naming.lookup("rmi://"+clientServer.masterIP+":"+clientServer.masterPORT+"/master");
             System.out.println(masterAccess);
-            // create
-            clientServer.createFile(masterAccess);
-            clientServer.readFile(masterAccess, "abc.txt");
-            clientServer.deleteFile(masterAccess, "abc.txt");
-            clientServer.restoreFile(masterAccess, "abc.txt");
+            System.out.println("Welcome to the Peer to Peer Distributed File System");
+
+            Scanner sc = new Scanner(System.in);
+            while(true){
+                System.out.println( "Please select one of the below options" + "\n" +
+                        "1. Create " + " " +
+                        "2. Read " + " " +
+                        "3. Write " + "\n" +
+                        "4. Update " + " " +
+                        "5. Delete " + " " +
+                        "6. Restore " + "\n" +
+                        "7. Help" + " " +
+                        "8. Exit"
+                );
+                if(sc.hasNextInt())
+                    userInput = Integer.parseInt(sc.nextLine());
+                else {
+                    sc.nextLine();
+                    userInput = 0;
+                }
+                if(userInput == 1){
+                    System.out.println("Enter File name to be created - ");
+                    String fileName = sc.nextLine();
+                    System.out.println("Enter File data - ");
+                    String fileData = sc.nextLine();
+                    clientServer.createFile(masterAccess, fileName, fileData);
+                } else if (userInput == 2){
+                    System.out.println("Enter File name to read - ");
+                    String fileName = sc.nextLine();
+                    clientServer.readFile(masterAccess, fileName);
+                } else if (userInput == 3){
+                    // yet to write
+                } else if (userInput == 4){
+                    System.out.println("Enter File name to be created - ");
+                    String fileName = sc.nextLine();
+                    System.out.println("Enter File data to be appended - ");
+                    String fileData = sc.nextLine();
+                    clientServer.updateFile(masterAccess, fileName, fileData);
+                } else if (userInput == 5){
+                    System.out.println("Enter File name to read - ");
+                    String fileName = sc.nextLine();
+                    clientServer.deleteFile(masterAccess, fileName);
+                } else if (userInput == 6){
+                    System.out.println("Enter File name to restore - ");
+                    String fileName = sc.nextLine();
+                    clientServer.restoreFile(masterAccess, fileName);
+                } else if(userInput == 7){
+                    clientServer.displayHelp();
+                } else if (userInput == 8){
+                    System.out.println("Exiting out of file distributed system");
+                    break;
+                } else{
+                    System.out.println("Invalid Choice, please enter correct choice");
+                }
+            };
+
+
+
+
             clientServer.updateFile(masterAccess, "abc.txt", " - updated");
         }
         catch(Exception ae)
         {
             System.out.println(ae);
         }
+    }
+
+    private void displayHelp() {
+        System.out.println(
+                "1. Create - create a file with the given name and given data" + "\n" +
+                "2. Read - read a file with the given name" + "\n" +
+                "3. Write - Replace the contents of the file with new given data" + "\n" +
+                "4. Update - Append new content to the existing contents of the file" + "\n" +
+                "5. Delete - Delete the file" + "\n" +
+                "6. Restore - Restore the file"
+        );
     }
 }
