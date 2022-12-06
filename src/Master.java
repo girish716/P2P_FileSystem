@@ -11,4 +11,5 @@ public interface Master extends Remote{
     public boolean deleteFile(String fileName) throws IOException;
     public boolean restoreFile(String fileName) throws IOException;
     public String updateCache(String path, String filename) throws RemoteException;
+    public void maliciousCheck() throws IOException;
 }
