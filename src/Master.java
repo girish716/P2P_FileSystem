@@ -8,8 +8,11 @@ public interface Master extends Remote{
     public List<String> getPaths(String filename) throws RemoteException;
     public String getPath() throws IOException;
     public int registerPeer(String peerData) throws IOException;
-    public boolean deleteFile(String fileName) throws IOException;
-    public boolean restoreFile(String fileName) throws IOException;
-    public String updateCache(String path, String filename) throws RemoteException;
     public void maliciousCheck() throws IOException;
+    public String read(String fileName, String uri) throws RemoteException;
+    public String create(String fileName, String uri) throws RemoteException;
+    public void write(String fileName, String uri) throws RemoteException;
+    public String delete(String fileName, String uri) throws RemoteException;
+    public String update(String fileName, String uri) throws RemoteException;
+    public String restore(String fileName, String uri) throws RemoteException;
 }

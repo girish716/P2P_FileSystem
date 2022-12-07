@@ -9,6 +9,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 
+
 public class MasterQuery extends UnicastRemoteObject implements Master
 {
     // lookup : Filename -> List of peers containing that file
@@ -17,8 +18,150 @@ public class MasterQuery extends UnicastRemoteObject implements Master
     private Set<String> peers;
     // bin : to store what all files are deleted
     private Map<String, Boolean> isDeleted;
-    //Schedular for malware check
+    // Permissions Hashmap to manage all the permissions related to a file
+    private Map<String, Permissions> permissions;
+    // Hashmap to manage encryption keys for each file
+    private Map<String, String> secretKeys;
+
+    //Scheduler for malware check
     private final static ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+
+    @Override
+    public String read(String fileName, String uri) throws RemoteException {
+        try{
+            String message;
+            if(!hasFile(fileName)) {
+                message = fileName + " doesn't exist";
+                return message;
+            }
+
+            Permissions permissionObj = permissions.get(fileName);
+            if(!permissionObj.canRead(uri)){
+                message = "The peer doesn't have permission to read";
+                return message;
+            }
+
+            List<String> paths = getPaths(fileName);
+            String peerPath = paths.get(0);
+            return peerPath;
+        }
+        catch(Exception e){
+            System.out.println(e);
+        }
+        return null;
+    }
+
+    @Override
+    public String create(String fileName, String uri) throws RemoteException {
+        try {
+            if (hasFile(fileName)){
+               System.out.println(fileName + " already exist");
+               return null;
+            }
+            String otherPeerURI = getPath();
+            Set<String> peerSet;
+            if(lookup.containsKey(fileName)){
+                peerSet = lookup.get(fileName);
+                peerSet.add(otherPeerURI);
+            }
+            else {
+                peerSet = new HashSet<>();
+                peerSet.add(otherPeerURI);
+            }
+            Permissions permissionObj = new PermissionsImpl(fileName, uri);
+            permissions.put(fileName, permissionObj);
+            lookup.put(fileName, peerSet);
+            isDeleted.put(fileName, false);
+            System.out.println(fileName + " data updated in the lookup table");
+            return otherPeerURI;
+        } catch (Exception io){
+            io.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public void write(String fileName, String URI) throws RemoteException {
+
+    }
+
+    @Override
+    public String delete(String fileName, String uri) throws RemoteException {
+        try{
+            String message;
+            if(!hasFile(fileName)) {
+                message = fileName + " doesn't exit";
+                return message;
+            }
+            Permissions permissionObj = permissions.get(fileName);
+            if(!permissionObj.canDelete(uri)){
+                message = "The peer doesn't have permission to delete/restore";
+                return message;
+            }
+            List<String> paths = getPaths(fileName);
+            String peerURI = paths.get(0);
+            isDeleted.put(fileName, true);
+            return peerURI;
+        }
+        catch(Exception e){
+            System.out.println(e);
+        }
+        return null;
+
+    }
+
+    @Override
+    public String update(String fileName, String uri) throws RemoteException {
+        try{
+            String message;
+            if(!hasFile(fileName)) {
+                message = fileName + " doesn't exit";
+                return message;
+            }
+
+            Permissions permissionObj = permissions.get(fileName);
+            if(!permissionObj.canWrite(uri)){
+                message = "The peer doesn't have permission to write";
+                return message;
+            }
+
+            List<String> paths = getPaths(fileName);
+            String peerPath = paths.get(0);
+            return peerPath;
+        }
+        catch(Exception e){
+            System.out.println(e);
+        }
+        return null;
+
+    }
+
+    @Override
+    public String restore(String fileName, String uri) throws RemoteException {
+        try{
+            String message;
+            if(hasFile(fileName)) {
+                message = fileName + " already exist";
+                return message;
+            }
+
+            Permissions permissionObj = permissions.get(fileName);
+            if(!permissionObj.canWrite(uri)){
+                message = "The peer doesn't have permission to delete/restore";
+                return message;
+            }
+
+            List<String> paths = getPaths(fileName);
+            String peerPath = paths.get(0);
+            isDeleted.put(fileName, false);
+            return peerPath;
+        }
+        catch(Exception e){
+            System.out.println(e);
+        }
+        return null;
+
+    }
 
     // Default constructor to throw RemoteException
     // from its parent constructor
@@ -28,19 +171,17 @@ public class MasterQuery extends UnicastRemoteObject implements Master
         lookup = new HashMap<>();
         peers = new HashSet<>();
         isDeleted = new HashMap<>();
+        permissions = new HashMap<>();
+        secretKeys = new HashMap<>();
 
     }
 
-    /**
-     * @param filename
-     * @return
-     * @throws RemoteException
-     */
     @Override
     public boolean hasFile(String filename) throws RemoteException{
         try {
             if(lookup.containsKey(filename) && !isDeleted.get(filename)){
-                System.out.println("Master has "+ filename);
+                System.out.println("Lookup Successfull \n" +
+                        "Master has "+ filename);
                 return true;
             }
         } catch (Exception io){
@@ -49,16 +190,11 @@ public class MasterQuery extends UnicastRemoteObject implements Master
         return false;
     }
 
-
-    /**
-     * @return
-     * @throws IOException
-     */
     @Override
     public String getPath() throws IOException{
         try {
             int size = peers.size();
-            int item = new Random().nextInt(size); // In real life, the Random object should be rather more shared than this
+            int item = new Random().nextInt(size);
             int i = 0;
             for(String peer : peers)
             {
@@ -72,12 +208,6 @@ public class MasterQuery extends UnicastRemoteObject implements Master
         return null;
     }
 
-
-    /**
-     * @param filename
-     * @return
-     * @throws RemoteException
-     */
     @Override
     public List<String> getPaths(String filename) throws RemoteException{
         try {
@@ -92,11 +222,6 @@ public class MasterQuery extends UnicastRemoteObject implements Master
         return null;
     }
 
-    /**
-     * @param peerData
-     * @return
-     * @throws IOException
-     */
     @Override
     public int registerPeer(String peerData) throws IOException{
         try {
@@ -115,56 +240,6 @@ public class MasterQuery extends UnicastRemoteObject implements Master
         return -1;
     }
 
-    @Override
-    public boolean deleteFile(String fileName) throws IOException {
-        try{
-            isDeleted.put(fileName, true);
-            return true;
-        }
-        catch (Exception e){
-            System.out.println(e);
-        }
-        return false;
-    }
-
-    @Override
-    public boolean restoreFile(String fileName) throws IOException {
-        try{
-            isDeleted.put(fileName, false);
-            return true;
-        }
-        catch (Exception e){
-            System.out.println(e);
-        }
-        return false;
-    }
-
-    /**
-     * @param path
-     * @param filename
-     * @return
-     * @throws RemoteException
-     */
-    @Override
-    public String updateCache(String path, String filename) throws RemoteException{
-        try {
-            Set<String> paths;
-            if(lookup.containsKey(filename)){
-                paths = lookup.get(filename);
-                paths.add(path);
-            }
-            else {
-                paths = new HashSet<>();
-                paths.add(path);
-            }
-            lookup.put(filename, paths);
-            isDeleted.put(filename, false);
-            System.out.println(filename + " updated in the lookup table");
-        } catch (Exception io){
-            io.printStackTrace();
-        }
-        return null;
-    }
     @Override
     public void maliciousCheck() throws IOException {
         executorService.scheduleAtFixedRate(new Runnable() {

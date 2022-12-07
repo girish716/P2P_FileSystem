@@ -1,7 +1,6 @@
 import java.rmi.Naming;
 import java.util.*;
 import java.io.FileInputStream;
-import java.io.IOException;
 
 
 public class PeerClient {
@@ -9,6 +8,7 @@ public class PeerClient {
     String masterIP;
     String serverPORT;
     String serverIP;
+    String myURI;
 
     PeerClient(){
         try{
@@ -19,6 +19,7 @@ public class PeerClient {
             this.masterIP = prop.getProperty("MASTER_IP");
             this.serverPORT = prop.getProperty("SERVER_PORT");
             this.serverIP = prop.getProperty("SERVER_IP");
+            this.myURI = "rmi://" + this.serverIP+":"+this.serverPORT + "/peer";
         }
         catch(Exception e){
             e.printStackTrace();
@@ -28,17 +29,16 @@ public class PeerClient {
     public void createFile(Master masterServer, String fileName, String fileData){
         try{
             //fetch IP and PORT of random peer
-            String peerData = masterServer.getPath();
+            String peerURI = masterServer.create(fileName, myURI);
+            if(peerURI == null) {
+                System.out.println(fileName + " already exists");
+                return;
+            }
             // lookup method to find reference of remote object
             FDS peerServer =
-                    (FDS)Naming.lookup(peerData);
-            String response = peerServer.create(fileName, fileData);
+                    (FDS)Naming.lookup(peerURI);
+            peerServer.create(fileName, fileData);
             System.out.println("Successfully created " + fileName);
-            if(response!=null){
-                masterServer.updateCache("rmi://" + this.serverIP+":"+this.serverPORT + "/peer", response);
-                List<String> paths = masterServer.getPaths(response);
-                System.out.println(paths);
-            }
         }
         catch(Exception e){
             System.out.println(e);
@@ -47,77 +47,87 @@ public class PeerClient {
 
     public void readFile(Master masterServer, String fileName){
         try{
-            if(!masterServer.hasFile(fileName)) return;
-
-            List<String> paths = masterServer.getPaths(fileName);
-            String peerPath = paths.get(0);
-
-            // connect with server
-            FDS peerServer =
-                    (FDS)Naming.lookup(peerPath);
-            String fileData = peerServer.read(fileName);
-            if(fileData==null){
-                System.out.println("Failed to read file......");
-            }
-            System.out.println("File Data : "+ fileData);
-        }
-        catch(Exception e){
-            System.out.println(e);
-        }
-    }
-
-    public void updateFile(Master masterServer, String fileName, String updatedData){
-        try{
-            if(!masterServer.hasFile(fileName)) return;
-
-            List<String> paths = masterServer.getPaths(fileName);
-            String peerPath = paths.get(0);
-
-            // connect with server
-            FDS peerServer =
-                    (FDS)Naming.lookup(peerPath);
-            String fileData = peerServer.read(fileName);
-            String newData = fileData + updatedData;
-            String updatedFileData = peerServer.update(fileName, newData);
-            System.out.println("Updated file data - "+updatedFileData);
-        }
-        catch(Exception e){
-            System.out.println(e);
-        }
-    }
-    public void deleteFile(Master masterServer, String fileName){
-        try{
-            if(!masterServer.hasFile(fileName)){
-                System.out.println("File not available....");
+            String response = masterServer.read(fileName, myURI);
+            if(response.equals(fileName + " doesn't exist")){
+                System.out.println(response);
+                return;
+            } else if(response.equals("The peer doesn't have permission to read")){
+                System.out.println("You don't have permission to read");
                 return;
             }
-            List<String> paths = masterServer.getPaths(fileName);
-            String peerPath = paths.get(0);
 
             // connect with server
             FDS peerServer =
-                    (FDS)Naming.lookup(peerPath);
+                    (FDS)Naming.lookup(response);
+            String fileData = peerServer.read(fileName);
+            if(fileData==null){
+                System.out.println("Failed to read " + fileName);
+            }
+            System.out.println("File Data : \n"+ fileData);
+        }
+        catch(Exception e){
+            System.out.println(e);
+        }
+    }
+
+    public void updateFile(Master masterServer, String fileName, String newData){
+        try {
+            String response = masterServer.update(fileName, myURI);
+            if(response.equals(fileName + " doesn't exit")){
+                System.out.println(response);
+                return;
+            } else if(response.equals("The peer doesn't have permission to write")){
+                System.out.println("You don't have permission to write");
+                return;
+            }
+
+            // connect with server
+            FDS peerServer =
+                    (FDS)Naming.lookup(response);
+
+            peerServer.update(fileName, newData);
+            System.out.println("Successfully updated the " + fileName + " data");
+        }
+            catch(Exception e){
+            System.out.println(e);
+        }
+    }
+    public void delete(Master masterServer, String fileName){
+        try{
+            String response = masterServer.delete(fileName, myURI);
+            if(response.equals(fileName + " doesn't exit")){
+                System.out.println(response);
+                return;
+            } else if(response.equals("The peer doesn't have permission to delete/restore")){
+                System.out.println("You don't have permission to delete");
+                return;
+            }
+
+            // connect with server
+            FDS peerServer =
+                    (FDS)Naming.lookup(response);
             peerServer.delete(fileName);
-            masterServer.deleteFile(fileName);
-            System.out.println("successfully deleted - "+ fileName);
+            System.out.println("successfully deleted "+ fileName);
         }
         catch (Exception e){
             System.out.println(e);
         }
     }
 
-    public void restoreFile(Master masterServer, String fileName){
+    public void restore(Master masterServer, String fileName){
         try{
-            if(masterServer.restoreFile(fileName)){
-                List<String> paths = masterServer.getPaths(fileName);
-                String peerPath = paths.get(0);
-
-                // connect with server
-                FDS peerServer =
-                        (FDS)Naming.lookup(peerPath);
-                peerServer.restore(fileName);
-                System.out.println("restore completed for - "+ fileName);
+            String response = masterServer.restore(fileName, myURI);
+            if(response.equals(fileName + " already exist")){
+                System.out.println(response);
+                return;
+            } else if(response.equals("The peer doesn't have permission to delete/restore")){
+                System.out.println("You don't have permission to delete/restore");
+                return;
             }
+            FDS peerServer =
+                    (FDS)Naming.lookup(response);
+            peerServer.restore(fileName);
+            System.out.println(fileName + " Successfully Restored ");
         }
         catch (Exception e){
             System.out.println(e);
@@ -168,19 +178,19 @@ public class PeerClient {
                 } else if (userInput == 3){
                     // yet to write
                 } else if (userInput == 4){
-                    System.out.println("Enter File name to be created - ");
+                    System.out.println("Enter File name to be updated - ");
                     String fileName = sc.nextLine();
-                    System.out.println("Enter File data to be appended - ");
+                    System.out.println("Enter new data to be appended - ");
                     String fileData = sc.nextLine();
                     clientServer.updateFile(masterAccess, fileName, fileData);
                 } else if (userInput == 5){
                     System.out.println("Enter File name to read - ");
                     String fileName = sc.nextLine();
-                    clientServer.deleteFile(masterAccess, fileName);
+                    clientServer.delete(masterAccess, fileName);
                 } else if (userInput == 6){
                     System.out.println("Enter File name to restore - ");
                     String fileName = sc.nextLine();
-                    clientServer.restoreFile(masterAccess, fileName);
+                    clientServer.restore(masterAccess, fileName);
                 } else if(userInput == 7){
                     clientServer.displayHelp();
                 } else if (userInput == 8){
