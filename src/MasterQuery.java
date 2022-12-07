@@ -1,14 +1,12 @@
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.rmi.*;
 import java.rmi.server.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+
 
 
 
@@ -179,23 +177,23 @@ public class MasterQuery extends UnicastRemoteObject implements Master
     }
 
     @Override
-    public String update(String fileName, String uri) throws RemoteException {
+    public Map.Entry<String, Set<String>> update(String fileName, String uri) throws RemoteException {
         try{
+            Map.Entry<String, Set<String>> response;
             String message;
             if(!hasFile(fileName)) {
                 message = fileName + " doesn't exit";
-                return message;
+                return new AbstractMap.SimpleEntry<>(message, new HashSet<>());
             }
 
             Permissions permissionObj = permissions.get(fileName);
             if(!permissionObj.canWrite(uri)){
                 message = "The peer doesn't have permission to write";
-                return message;
+                return new AbstractMap.SimpleEntry<>(message, new HashSet<>());
             }
 
-            List<String> paths = getPaths(fileName);
-            String peerPath = paths.get(0);
-            return peerPath;
+            Set<String> paths = new HashSet<>(getPaths(fileName));
+            return new AbstractMap.SimpleEntry<>("", paths);
         }
         catch(Exception e){
             System.out.println(e);

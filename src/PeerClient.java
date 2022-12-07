@@ -74,20 +74,21 @@ public class PeerClient {
 
     public void updateFile(Master masterServer, String fileName, String newData){
         try {
-            String response = masterServer.update(fileName, myURI);
-            if(response.equals(fileName + " doesn't exit")){
+            Map.Entry<String, Set<String>> response = masterServer.update(fileName, myURI);
+            if(response.getKey().equals(fileName + " doesn't exit")){
                 System.out.println(response);
                 return;
-            } else if(response.equals("The peer doesn't have permission to write")){
+            } else if(response.getKey().equals("The peer doesn't have permission to write")){
                 System.out.println("You don't have permission to write");
                 return;
             }
 
             // connect with server
-            FDS peerServer =
-                    (FDS)Naming.lookup(response);
-
-            peerServer.update(fileName, newData);
+            for(String peer : response.getValue()){
+                FDS peerServer =
+                        (FDS)Naming.lookup(peer);
+                peerServer.update(fileName, newData);
+            }
             System.out.println("Successfully updated the " + fileName + " data");
         }
             catch(Exception e){
