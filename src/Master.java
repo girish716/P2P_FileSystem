@@ -15,4 +15,5 @@ public interface Master extends Remote{
     public String delete(String fileName, String uri) throws RemoteException;
     public String update(String fileName, String uri) throws RemoteException;
     public String restore(String fileName, String uri) throws RemoteException;
+    public String delegatePermission(String fileName, String uri, String otherURI, String permission) throws RemoteException;
 }

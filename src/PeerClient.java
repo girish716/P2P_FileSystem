@@ -14,7 +14,7 @@ public class PeerClient {
         try{
             Properties prop = new Properties();
             prop.load(new FileInputStream("../resources/config.properties"));
-            //Reading each property value
+            //Fetching each property value
             this.masterPORT = prop.getProperty("MASTER_PORT");
             this.masterIP = prop.getProperty("MASTER_IP");
             this.serverPORT = prop.getProperty("SERVER_PORT");
@@ -134,6 +134,16 @@ public class PeerClient {
         }
     }
 
+    public void delegatePermission(Master masterServer, String fileName, String otherURI, String permission) {
+        try{
+            String response = masterServer.delegatePermission(fileName, myURI, otherURI, permission);
+            System.out.println(response);
+        }
+        catch (Exception e){
+            System.out.println(e);
+        }
+    }
+
     public static void main(String args[]) {
         String response;
         int userInput;
@@ -156,8 +166,9 @@ public class PeerClient {
                         "4. Update " + " " +
                         "5. Delete " + " " +
                         "6. Restore " + "\n" +
-                        "7. Help" + " " +
-                        "8. Exit"
+                        "7. Delegate permissions" +
+                        "8. Help" + " " +
+                        "9. Exit"
                 );
                 if(sc.hasNextInt())
                     userInput = Integer.parseInt(sc.nextLine());
@@ -184,7 +195,7 @@ public class PeerClient {
                     String fileData = sc.nextLine();
                     clientServer.updateFile(masterAccess, fileName, fileData);
                 } else if (userInput == 5){
-                    System.out.println("Enter File name to read - ");
+                    System.out.println("Enter File name to delete - ");
                     String fileName = sc.nextLine();
                     clientServer.delete(masterAccess, fileName);
                 } else if (userInput == 6){
@@ -192,19 +203,24 @@ public class PeerClient {
                     String fileName = sc.nextLine();
                     clientServer.restore(masterAccess, fileName);
                 } else if(userInput == 7){
-                    clientServer.displayHelp();
+                    System.out.println("Enter file name to delegate the permission");
+                    String fileName = sc.nextLine();
+                    System.out.println("Enter IP address and port ex:10.0.4.245:1099");
+                    String uri = sc.nextLine();
+                    uri = "rmi://" + uri +"/peer";
+                    System.out.println("Enter permission i.e, read, write, delete");
+                    String permission = sc.nextLine();
+                    clientServer.delegatePermission(masterAccess, fileName, uri, permission);
                 } else if (userInput == 8){
+                    clientServer.displayHelp();
+                } else if (userInput == 9){
                     System.out.println("Exiting out of file distributed system");
                     break;
-                } else{
+                }
+                else{
                     System.out.println("Invalid Choice, please enter correct choice");
                 }
             };
-
-
-
-
-            clientServer.updateFile(masterAccess, "abc.txt", " - updated");
         }
         catch(Exception ae)
         {
@@ -212,7 +228,9 @@ public class PeerClient {
         }
     }
 
-    private void displayHelp() {
+
+
+    public void displayHelp() {
         System.out.println(
                 "1. Create - create a file with the given name and given data" + "\n" +
                 "2. Read - read a file with the given name" + "\n" +

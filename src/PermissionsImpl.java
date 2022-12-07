@@ -14,11 +14,11 @@ public class PermissionsImpl implements Permissions {
         this.delete = new HashSet<>();
     }
 
-    public PermissionsImpl(String filePath, String IP){
+    public PermissionsImpl(String filePath, String uri){
         this(filePath);
-        this.read.add(IP);
-        this.write.add(IP);
-        this.delete.add(IP);
+        this.read.add(uri);
+        this.write.add(uri);
+        this.delete.add(uri);
     }
 
     @Override

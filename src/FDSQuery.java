@@ -25,11 +25,6 @@ public class FDSQuery extends UnicastRemoteObject implements FDS
         isDeleted = new HashMap<>();
     }
 
-    /**
-     * @param filename
-     * @return
-     * @throws RemoteException
-     */
     @Override
     public String read(String filename) throws Exception{
         FutureTask readTask = new FutureTask<String>(new Callable<String>() {
@@ -49,12 +44,6 @@ public class FDSQuery extends UnicastRemoteObject implements FDS
         return (String) readTask.get();
     }
 
-    /**
-     * @param filename
-     * @param data
-     * @return
-     * @throws RemoteException
-     */
     @Override
     public String create(String filename, String data) throws Exception {
         FutureTask createTask = new FutureTask<String>(new Callable<String>() {
@@ -79,12 +68,6 @@ public class FDSQuery extends UnicastRemoteObject implements FDS
         return (String) createTask.get();
     }
 
-    /**
-     * @param filename
-     * @param data
-     * @return
-     * @throws RemoteException
-     */
     @Override
     public String update(String filename, String data) throws Exception {
         FutureTask updateTask = new FutureTask<String>(new Callable<String>() {
@@ -106,11 +89,6 @@ public class FDSQuery extends UnicastRemoteObject implements FDS
 
     }
 
-    /**
-     * @param filename
-     * @return
-     * @throws RemoteException
-     */
     @Override
     public boolean restore(String filename) throws Exception {
         FutureTask createTask = new FutureTask<Boolean>(new Callable<Boolean>() {
@@ -129,20 +107,11 @@ public class FDSQuery extends UnicastRemoteObject implements FDS
         return (boolean) createTask.get();
     }
 
-    /**
-     * @return
-     * @throws RemoteException
-     */
     @Override
     public List<String> getAllFiles(String path) throws RemoteException {
         return null;
     }
 
-    /**
-     * @param filename
-     * @return
-     * @throws RemoteException
-     */
     @Override
     public boolean delete(String filename) throws Exception {
         FutureTask deleteTask = new FutureTask<Boolean>(new Callable<Boolean>() {

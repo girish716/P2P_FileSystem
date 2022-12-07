@@ -86,6 +86,62 @@ public class MasterQuery extends UnicastRemoteObject implements Master
     }
 
     @Override
+    public String delegatePermission(String fileName, String uri, String otherURI, String permission) throws RemoteException {
+        try{
+            String message;
+            if(!hasFile(fileName)) {
+                message = fileName + " doesn't exit";
+                return message;
+            }
+            Permissions permissionObj = permissions.get(fileName);
+            if(permission.equals("read")){
+                if(permissionObj.canRead(uri)){
+                    if(permissionObj.canRead(otherURI)){
+                        message = "The other peer already have "+permission;
+                        return message;
+                    } else {
+                        permissionObj.setRead(otherURI);
+                    }
+                } else {
+                    message = "The peer doesn't have " + permission + " permission";
+                    return message;
+                }
+            }
+            if(permission.equals("write")){
+                if(permissionObj.canWrite(uri)){
+                    if(permissionObj.canWrite(otherURI)){
+                        message = "The other peer already have "+permission;
+                        return message;
+                    } else {
+                        permissionObj.setWrite(otherURI);
+                    }
+                } else {
+                    message = "The peer doesn't have " + permission + " permission";
+                    return message;
+                }
+            }
+            if(permission.equals("delete")){
+                if(permissionObj.canDelete(uri)){
+                    if(permissionObj.canDelete(otherURI)){
+                        message = "The other peer already have "+permission;
+                        return message;
+                    } else {
+                        permissionObj.setWrite(otherURI);
+                    }
+                } else {
+                    message = "The peer doesn't have " + permission + " permission";
+                    return message;
+                }
+            }
+
+        }
+        catch(Exception e){
+            System.out.println(e);
+        }
+        return null;
+    }
+
+    @Override
     public String delete(String fileName, String uri) throws RemoteException {
         try{
             String message;
@@ -265,4 +321,6 @@ public class MasterQuery extends UnicastRemoteObject implements Master
             }
         }, 0, 5, TimeUnit.SECONDS);
     }
+
+
 }
