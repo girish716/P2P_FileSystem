@@ -90,10 +90,6 @@ public class MasterQuery extends UnicastRemoteObject implements Master
         return null;
     }
 
-    @Override
-    public void write(String fileName, String URI) throws RemoteException {
-
-    }
 
     @Override
     public String delegatePermission(String fileName, String uri, String otherURI, String permission) throws RemoteException {
@@ -178,6 +174,32 @@ public class MasterQuery extends UnicastRemoteObject implements Master
 
     @Override
     public Map.Entry<String, Set<String>> update(String fileName, String uri) throws RemoteException {
+        try{
+            Map.Entry<String, Set<String>> response;
+            String message;
+            if(!hasFile(fileName)) {
+                message = fileName + " doesn't exit";
+                return new AbstractMap.SimpleEntry<>(message, new HashSet<>());
+            }
+
+            Permissions permissionObj = permissions.get(fileName);
+            if(!permissionObj.canWrite(uri)){
+                message = "The peer doesn't have permission to write";
+                return new AbstractMap.SimpleEntry<>(message, new HashSet<>());
+            }
+
+            Set<String> paths = new HashSet<>(getPaths(fileName));
+            return new AbstractMap.SimpleEntry<>("", paths);
+        }
+        catch(Exception e){
+            System.out.println(e);
+        }
+        return null;
+
+    }
+
+    @Override
+    public Map.Entry<String, Set<String>> write(String fileName, String uri) throws RemoteException {
         try{
             Map.Entry<String, Set<String>> response;
             String message;

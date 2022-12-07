@@ -82,16 +82,37 @@ public class PeerClient {
                 System.out.println("You don't have permission to write");
                 return;
             }
-
             // connect with server
             for(String peer : response.getValue()){
                 FDS peerServer =
                         (FDS)Naming.lookup(peer);
-                peerServer.update(fileName, newData);
+                peerServer.update(fileName, " "+newData);
             }
             System.out.println("Successfully updated the " + fileName + " data");
         }
             catch(Exception e){
+            System.out.println(e);
+        }
+    }
+    public void writeFile(Master masterServer, String fileName, String data){
+        try {
+            Map.Entry<String, Set<String>> response = masterServer.update(fileName, myURI);
+            if(response.getKey().equals(fileName + " doesn't exit")){
+                System.out.println(response);
+                return;
+            } else if(response.getKey().equals("The peer doesn't have permission to write")){
+                System.out.println("You don't have permission to write");
+                return;
+            }
+            // connect with server
+            for(String peer : response.getValue()){
+                FDS peerServer =
+                        (FDS)Naming.lookup(peer);
+                peerServer.write(fileName, " "+data);
+            }
+            System.out.println("Successfully wrote to the " + fileName);
+        }
+        catch(Exception e){
             System.out.println(e);
         }
     }
@@ -190,7 +211,11 @@ public class PeerClient {
                     String fileName = sc.nextLine();
                     clientServer.readFile(masterAccess, fileName);
                 } else if (userInput == 3){
-                    // yet to write
+                    System.out.println("Enter File name to be updated - ");
+                    String fileName = sc.nextLine();
+                    System.out.println("Enter the file data - ");
+                    String fileData = sc.nextLine();
+                    clientServer.writeFile(masterAccess, fileName, fileData);
                 } else if (userInput == 4){
                     System.out.println("Enter File name to be updated - ");
                     String fileName = sc.nextLine();

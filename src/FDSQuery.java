@@ -1,7 +1,4 @@
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -73,6 +70,29 @@ public class FDSQuery extends UnicastRemoteObject implements FDS
         });
         new Thread(createTask).start();
         return (String) createTask.get();
+    }
+
+    @Override
+    public String write(String filename, String data) throws Exception {
+        FutureTask writeTask = new FutureTask<String>(new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+
+                try {
+                    FileWriter myWriter = new FileWriter(filename);
+                    myWriter.write(data);
+                    myWriter.close();
+                    System.out.println("Successfully wrote to the " + filename);
+                    return filename;
+                } catch (IOException io) {
+                    io.printStackTrace();
+                }
+
+                return null;
+            }
+        });
+        new Thread(writeTask).start();
+        return (String) writeTask.get();
     }
 
     @Override
