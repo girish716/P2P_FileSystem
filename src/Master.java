@@ -10,7 +10,7 @@ public interface Master extends Remote{
     public int registerPeer(String peerData) throws IOException;
     public void maliciousCheck() throws IOException;
     public String read(String fileName, String uri) throws RemoteException;
-    public String create(String fileName, String uri) throws RemoteException;
+    public Set<String> create(String fileName, String uri) throws RemoteException;
     public void write(String fileName, String uri) throws RemoteException;
     public String delete(String fileName, String uri) throws RemoteException;
     public String update(String fileName, String uri) throws RemoteException;

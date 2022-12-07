@@ -29,15 +29,17 @@ public class PeerClient {
     public void createFile(Master masterServer, String fileName, String fileData){
         try{
             //fetch IP and PORT of random peer
-            String peerURI = masterServer.create(fileName, myURI);
-            if(peerURI == null) {
+            Set<String> peersURI = masterServer.create(fileName, myURI);
+            if(peersURI == null) {
                 System.out.println(fileName + " already exists");
                 return;
             }
             // lookup method to find reference of remote object
-            FDS peerServer =
-                    (FDS)Naming.lookup(peerURI);
-            peerServer.create(fileName, fileData);
+            for(String peerURI : peersURI){
+                FDS peerServer =
+                        (FDS)Naming.lookup(peerURI);
+                peerServer.create(fileName, fileData);
+            }
             System.out.println("Successfully created " + fileName);
         }
         catch(Exception e){

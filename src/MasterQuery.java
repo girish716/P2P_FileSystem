@@ -1,3 +1,5 @@
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.rmi.*;
 import java.rmi.server.*;
@@ -22,6 +24,25 @@ public class MasterQuery extends UnicastRemoteObject implements Master
     private Map<String, Permissions> permissions;
     // Hashmap to manage encryption keys for each file
     private Map<String, String> secretKeys;
+
+    private Integer replicaFactor;
+
+    // Default constructor to throw RemoteException
+    // from its parent constructor
+    MasterQuery() throws IOException {
+        super();
+        lookup = new HashMap<>();
+        peers = new HashSet<>();
+        isDeleted = new HashMap<>();
+        permissions = new HashMap<>();
+        secretKeys = new HashMap<>();
+        Properties prop = new Properties();
+        prop.load(new FileInputStream("../resources/config.properties"));
+        //Reading each property value
+        this.replicaFactor = Integer.parseInt(prop.getProperty("REPLICA_FACTOR"));
+
+    }
+
 
     //Scheduler for malware check
     private final static ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
@@ -52,28 +73,19 @@ public class MasterQuery extends UnicastRemoteObject implements Master
     }
 
     @Override
-    public String create(String fileName, String uri) throws RemoteException {
+    public Set<String> create(String fileName, String uri) throws RemoteException {
         try {
             if (hasFile(fileName)){
                System.out.println(fileName + " already exist");
                return null;
             }
-            String otherPeerURI = getPath();
-            Set<String> peerSet;
-            if(lookup.containsKey(fileName)){
-                peerSet = lookup.get(fileName);
-                peerSet.add(otherPeerURI);
-            }
-            else {
-                peerSet = new HashSet<>();
-                peerSet.add(otherPeerURI);
-            }
+            Set<String> peersURI = getPaths_RF();
             Permissions permissionObj = new PermissionsImpl(fileName, uri);
             permissions.put(fileName, permissionObj);
-            lookup.put(fileName, peerSet);
+            lookup.put(fileName, peersURI);
             isDeleted.put(fileName, false);
             System.out.println(fileName + " data updated in the lookup table");
-            return otherPeerURI;
+            return peersURI;
         } catch (Exception io){
             io.printStackTrace();
         }
@@ -219,18 +231,6 @@ public class MasterQuery extends UnicastRemoteObject implements Master
 
     }
 
-    // Default constructor to throw RemoteException
-    // from its parent constructor
-    MasterQuery() throws RemoteException
-    {
-        super();
-        lookup = new HashMap<>();
-        peers = new HashSet<>();
-        isDeleted = new HashMap<>();
-        permissions = new HashMap<>();
-        secretKeys = new HashMap<>();
-
-    }
 
     @Override
     public boolean hasFile(String filename) throws RemoteException{
@@ -258,6 +258,48 @@ public class MasterQuery extends UnicastRemoteObject implements Master
                     return peer;
                 i++;
             }
+        } catch (Exception io) {
+            io.printStackTrace();
+        }
+        return null;
+    }
+
+    public Set<Integer> getRandomNumbers(int replicaFactor, int size){
+        try{
+            Set<Integer> nums = new HashSet<>();
+            for(int i=0;i<replicaFactor;i++){
+                int num = new Random().nextInt(size);
+                while(!nums.contains(num)){
+                    num = new Random().nextInt(size);
+                }
+                nums.add(num);
+            }
+            return nums;
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public Set<String> getPaths_RF(){
+        try {
+            int size = peers.size();
+            if(size<=this.replicaFactor){
+                return peers;
+            }
+            Set<Integer> randomIntegers = getRandomNumbers(this.replicaFactor, size);
+            Set<String> newPeers = new HashSet<>();
+            for(int randomIndex : randomIntegers){
+                int i = 0;
+                for(String peer : peers){
+                    if(i==randomIndex){
+                        newPeers.add(peer);
+                    }
+                    i++;
+                }
+            }
+            return newPeers;
         } catch (Exception io) {
             io.printStackTrace();
         }

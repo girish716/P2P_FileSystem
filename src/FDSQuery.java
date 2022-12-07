@@ -1,3 +1,5 @@
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -8,8 +10,8 @@ import java.rmi.*;
 import java.rmi.server.*;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
 
@@ -17,12 +19,17 @@ public class FDSQuery extends UnicastRemoteObject implements FDS
 {
     public HashMap<String, Boolean> isDeleted;
 
+    public int replicaFactor;
+
     // Default constructor to throw RemoteException
     // from its parent constructor
-    FDSQuery() throws RemoteException
-    {
+    FDSQuery() throws IOException {
         super();
         isDeleted = new HashMap<>();
+        Properties prop = new Properties();
+        prop.load(new FileInputStream("../resources/config.properties"));
+        //Reading each property value
+        this.replicaFactor = Integer.parseInt(prop.getProperty("REPLICA_FACTOR"));
     }
 
     @Override
@@ -117,7 +124,6 @@ public class FDSQuery extends UnicastRemoteObject implements FDS
         FutureTask deleteTask = new FutureTask<Boolean>(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
-
                 if(isDeleted.containsKey(filename)){
                     isDeleted.put(filename, true);
                     System.out.println("Successfully deleted - " + filename);
