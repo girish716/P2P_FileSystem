@@ -73,6 +73,30 @@ public class FDSQuery extends UnicastRemoteObject implements FDS
     }
 
     @Override
+    public String createDirectory(String directoryname) throws Exception {
+        FutureTask createTask = new FutureTask<String>(new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+
+                try {
+                    File dir = new File(directoryname);
+                    isDeleted.put(directoryname, false);
+                    //creates Directory
+                    dir.mkdirs();
+                    System.out.println("Successfully created " + directoryname);
+                    return directoryname;
+                } catch (Exception io) {
+                    io.printStackTrace();
+                }
+
+                return null;
+            }
+        });
+        new Thread(createTask).start();
+        return (String) createTask.get();
+    }
+
+    @Override
     public String write(String filename, String data) throws Exception {
         FutureTask writeTask = new FutureTask<String>(new Callable<String>() {
             @Override

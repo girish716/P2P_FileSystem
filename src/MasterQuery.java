@@ -93,6 +93,26 @@ public class MasterQuery extends UnicastRemoteObject implements Master
         return null;
     }
 
+    @Override
+    public Set<String> createDirectory(String directoryName, String uri) throws RemoteException {
+        try {
+            if (hasFile(directoryName)){
+                System.out.println(directoryName + " already exist");
+                return null;
+            }
+            Set<String> peersURI = getPaths_RF();
+            Permissions permissionObj = new PermissionsImpl(directoryName, uri);
+            permissions.put(directoryName, permissionObj);
+            lookup.put(directoryName, peersURI);
+            isDeleted.put(directoryName, false);
+            System.out.println(directoryName + " data updated in the lookup table");
+            return peersURI;
+        } catch (Exception io){
+            io.printStackTrace();
+        }
+        return null;
+    }
+
 
     @Override
     public String delegatePermission(String fileName, String uri, String otherURI, String permission) throws RemoteException {

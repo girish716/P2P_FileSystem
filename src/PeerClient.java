@@ -104,6 +104,25 @@ public class PeerClient {
             System.out.println(e);
         }
     }
+    public void createDirectory(Master masterServer, String directoryName){
+        try {
+            Set<String> peersURI = masterServer.create(directoryName, myURI);
+            if(peersURI == null) {
+                System.out.println(directoryName + " already exists");
+                return;
+            }
+            // lookup method to find reference of remote object
+            for(String peerURI : peersURI){
+                FDS peerServer =
+                        (FDS)Naming.lookup(peerURI);
+                peerServer.createDirectory(directoryName);
+            }
+            System.out.println("Successfully created " + directoryName);
+        }
+        catch(Exception e){
+            System.out.println(e);
+        }
+    }
     public void writeFile(Master masterServer, String fileName, String data){
         try {
             Map.Entry<Map.Entry<String, SecretKey>, Set<String>> response = masterServer.update(fileName, myURI);
@@ -198,15 +217,16 @@ public class PeerClient {
             Scanner sc = new Scanner(System.in);
             while(true){
                 System.out.println( "Please select one of the below options" + "\n" +
-                        "1. Create " + " " +
-                        "2. Read " + " " +
-                        "3. Write " + "\n" +
-                        "4. Update " + " " +
-                        "5. Delete " + " " +
-                        "6. Restore " + "\n" +
-                        "7. Delegate permissions" +
-                        "8. Help" + " " +
-                        "9. Exit"
+                        "1. Create file" + " " +
+                        "2. Create Directory"+" "+
+                        "3. Read file" + " " +
+                        "4. Write file" + "\n" +
+                        "5. Update file" + " " +
+                        "6. Delete file" + " " +
+                        "7. Restore file" + "\n" +
+                        "8. Delegate permissions" +
+                        "9. Help" + " " +
+                        "10. Exit"
                 );
                 if(sc.hasNextInt())
                     userInput = Integer.parseInt(sc.nextLine());
@@ -214,37 +234,42 @@ public class PeerClient {
                     sc.nextLine();
                     userInput = 0;
                 }
-                if(userInput == 1){
+                if(userInput == 1) {
                     System.out.println("Enter File name to be created - ");
                     String fileName = sc.nextLine();
                     System.out.println("Enter File data - ");
                     String fileData = sc.nextLine();
                     clientServer.createFile(masterAccess, fileName, fileData);
-                } else if (userInput == 2){
+                }
+                else if (userInput == 2) {
+                        System.out.println("Enter Directory name to be created - ");
+                        String directoryName = sc.nextLine();
+                        clientServer.createDirectory(masterAccess, directoryName);
+                } else if (userInput == 3){
                     System.out.println("Enter File name to read - ");
                     String fileName = sc.nextLine();
                     clientServer.readFile(masterAccess, fileName);
-                } else if (userInput == 3){
+                } else if (userInput == 4){
                     System.out.println("Enter File name to be updated - ");
                     String fileName = sc.nextLine();
                     System.out.println("Enter the file data - ");
                     String fileData = sc.nextLine();
                     clientServer.writeFile(masterAccess, fileName, fileData);
-                } else if (userInput == 4){
+                } else if (userInput == 5){
                     System.out.println("Enter File name to be updated - ");
                     String fileName = sc.nextLine();
                     System.out.println("Enter new data to be appended - ");
                     String fileData = sc.nextLine();
                     clientServer.updateFile(masterAccess, fileName, fileData);
-                } else if (userInput == 5){
+                } else if (userInput == 6){
                     System.out.println("Enter File name to delete - ");
                     String fileName = sc.nextLine();
                     clientServer.delete(masterAccess, fileName);
-                } else if (userInput == 6){
+                } else if (userInput == 7){
                     System.out.println("Enter File name to restore - ");
                     String fileName = sc.nextLine();
                     clientServer.restore(masterAccess, fileName);
-                } else if(userInput == 7){
+                } else if(userInput == 8){
                     System.out.println("Enter file name to delegate the permission");
                     String fileName = sc.nextLine();
                     System.out.println("Enter IP address and port ex:10.0.4.245:1099");
@@ -253,9 +278,9 @@ public class PeerClient {
                     System.out.println("Enter permission i.e, read, write, delete");
                     String permission = sc.nextLine();
                     clientServer.delegatePermission(masterAccess, fileName, uri, permission);
-                } else if (userInput == 8){
-                    clientServer.displayHelp();
                 } else if (userInput == 9){
+                    clientServer.displayHelp();
+                } else if (userInput == 10){
                     System.out.println("Exiting out of file distributed system");
                     break;
                 }
@@ -269,8 +294,6 @@ public class PeerClient {
             System.out.println(ae);
         }
     }
-
-
 
     public void displayHelp() {
         System.out.println(
