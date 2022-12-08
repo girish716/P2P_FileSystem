@@ -1,3 +1,4 @@
+import javax.crypto.SecretKey;
 import java.rmi.Naming;
 import java.util.*;
 import java.io.FileInputStream;
@@ -29,7 +30,9 @@ public class PeerClient {
     public void createFile(Master masterServer, String fileName, String fileData){
         try{
             //fetch IP and PORT of random peer
-            Set<String> peersURI = masterServer.create(fileName, myURI);
+            Map.Entry<Set<String>, SecretKey> response = masterServer.create(fileName, myURI);
+            Set<String> peersURI = response.getKey();
+            SecretKey key = response.getValue();
             if(peersURI == null) {
                 System.out.println(fileName + " already exists");
                 return;
@@ -38,7 +41,8 @@ public class PeerClient {
             for(String peerURI : peersURI){
                 FDS peerServer =
                         (FDS)Naming.lookup(peerURI);
-                peerServer.create(fileName, fileData);
+                peerServer.create(AES.encrypt(fileName, key),
+                                  AES.encrypt(fileData, key));
             }
             System.out.println("Successfully created " + fileName);
         }
@@ -49,23 +53,25 @@ public class PeerClient {
 
     public void readFile(Master masterServer, String fileName){
         try{
-            String response = masterServer.read(fileName, myURI);
-            if(response.equals(fileName + " doesn't exist")){
-                System.out.println(response);
+            Map.Entry<String, SecretKey> response = masterServer.read(fileName, myURI);
+            String message = response.getKey();
+            SecretKey key = response.getValue();
+            if(message.equals(fileName + " doesn't exist")){
+                System.out.println(message);
                 return;
-            } else if(response.equals("The peer doesn't have permission to read")){
+            } else if(message.equals("The peer doesn't have permission to read")){
                 System.out.println("You don't have permission to read");
                 return;
             }
 
             // connect with server
             FDS peerServer =
-                    (FDS)Naming.lookup(response);
-            String fileData = peerServer.read(fileName);
+                    (FDS)Naming.lookup(message);
+            String fileData = peerServer.read(AES.encrypt(fileName, key));
             if(fileData==null){
                 System.out.println("Failed to read " + fileName);
             }
-            System.out.println("File Data : \n"+ fileData);
+            System.out.println("File Data : \n"+ AES.decrypt(fileData, key));
         }
         catch(Exception e){
             System.out.println(e);
@@ -74,19 +80,23 @@ public class PeerClient {
 
     public void updateFile(Master masterServer, String fileName, String newData){
         try {
-            Map.Entry<String, Set<String>> response = masterServer.update(fileName, myURI);
-            if(response.getKey().equals(fileName + " doesn't exit")){
+            Map.Entry<Map.Entry<String, SecretKey>, Set<String>> response = masterServer.update(fileName, myURI);
+            String message = response.getKey().getKey();
+            SecretKey key = response.getKey().getValue();
+            Set<String> peersPath = response.getValue();
+            if(message.equals(fileName + " doesn't exist")){
                 System.out.println(response);
                 return;
-            } else if(response.getKey().equals("The peer doesn't have permission to write")){
+            } else if(message.equals("The peer doesn't have permission to write")){
                 System.out.println("You don't have permission to write");
                 return;
             }
             // connect with server
-            for(String peer : response.getValue()){
+            for(String peer : peersPath){
                 FDS peerServer =
                         (FDS)Naming.lookup(peer);
-                peerServer.update(fileName, " "+newData);
+                peerServer.update(AES.encrypt(fileName, key),
+                        AES.encrypt(newData, key));
             }
             System.out.println("Successfully updated the " + fileName + " data");
         }
@@ -96,19 +106,23 @@ public class PeerClient {
     }
     public void writeFile(Master masterServer, String fileName, String data){
         try {
-            Map.Entry<String, Set<String>> response = masterServer.update(fileName, myURI);
-            if(response.getKey().equals(fileName + " doesn't exit")){
+            Map.Entry<Map.Entry<String, SecretKey>, Set<String>> response = masterServer.update(fileName, myURI);
+            String message = response.getKey().getKey();
+            SecretKey key = response.getKey().getValue();
+            Set<String> peers = response.getValue();
+            if(message.equals(fileName + " doesn't exit")){
                 System.out.println(response);
                 return;
-            } else if(response.getKey().equals("The peer doesn't have permission to write")){
+            } else if(message.equals("The peer doesn't have permission to write")){
                 System.out.println("You don't have permission to write");
                 return;
             }
             // connect with server
-            for(String peer : response.getValue()){
+            for(String peer : peers){
                 FDS peerServer =
                         (FDS)Naming.lookup(peer);
-                peerServer.write(fileName, " "+data);
+                peerServer.write(AES.encrypt(fileName, key),
+                        AES.encrypt(data, key));
             }
             System.out.println("Successfully wrote to the " + fileName);
         }

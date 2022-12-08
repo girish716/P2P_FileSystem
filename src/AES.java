@@ -4,24 +4,22 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 import java.util.Base64;
 
-/**
- * Possible KEY_SIZE values are 128, 192 and 256
- * Possible T_LEN values are 128, 120, 112, 104 and 96
- */
+// Reference : https://www.section.io/engineering-education/implementing-aes-encryption-and-decryption-in-java/
 
+// AES class contains encrypt, decrypt methods
 public class AES {
-    private SecretKey key;
-    private final int KEY_SIZE = 128;
-    private final int T_LEN = 128;
-    private Cipher encryptionCipher;
+    private final static int KEY_SIZE = 128;
+    private final static int T_LEN = 128;
+    private static Cipher encryptionCipher;
 
-    public void init() throws Exception {
+    public static SecretKey getSecretKey() throws Exception {
         KeyGenerator generator = KeyGenerator.getInstance("AES");
         generator.init(KEY_SIZE);
-        key = generator.generateKey();
+        SecretKey key = generator.generateKey();
+        return key;
     }
 
-    public String encrypt(String message) throws Exception {
+    public static String encrypt(String message, SecretKey key) throws Exception {
         byte[] messageInBytes = message.getBytes();
         encryptionCipher = Cipher.getInstance("AES/GCM/NoPadding");
         encryptionCipher.init(Cipher.ENCRYPT_MODE, key);
@@ -29,7 +27,7 @@ public class AES {
         return encode(encryptedBytes);
     }
 
-    public String decrypt(String encryptedMessage) throws Exception {
+    public static String decrypt(String encryptedMessage, SecretKey key) throws Exception {
         byte[] messageInBytes = decode(encryptedMessage);
         Cipher decryptionCipher = Cipher.getInstance("AES/GCM/NoPadding");
         GCMParameterSpec spec = new GCMParameterSpec(T_LEN, encryptionCipher.getIV());
@@ -40,27 +38,22 @@ public class AES {
         return new String(decryptedBytes);
     }
 
-    private String encode(byte[] data) {
+    private static String encode(byte[] data) {
         return Base64.getEncoder().encodeToString(data);
     }
 
-    private byte[] decode(String data) {
+    private static byte[] decode(String data) {
         return Base64.getDecoder().decode(data);
     }
 
     public static void main(String[] args) {
         try {
             AES aes = new AES();
-            aes.init();
-//            String encryptedMessage = aes.encrypt("ZaheerTheCoders");
-//            String decryptedMessage = aes.decrypt(encryptedMessage);
-//            System.err.println("Decrypted Message : " + decryptedMessage);
-//            System.err.println("Encrypted Message : " + encryptedMessage);
-            String decryptedMessage = aes.decrypt(aes.encrypt("ZaheerTheCoders"));
-            String encryptedMessage = aes.encrypt(decryptedMessage);
+            SecretKey key = aes.getSecretKey();
+            String encryptedMessage = aes.encrypt("Girish", key);
+            String decryptedMessage = aes.decrypt(encryptedMessage, key);
             System.err.println("Encrypted Message : " + encryptedMessage);
             System.err.println("Decrypted Message : " + decryptedMessage);
-
 
         } catch (Exception ignored) {
         }
