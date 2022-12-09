@@ -100,8 +100,10 @@ public class PeerClient {
             for(String peer : peersPath){
                 FDS peerServer =
                         (FDS)Naming.lookup(peer);
-                peerServer.update(AES.encrypt(fileName, key),
-                        AES.encrypt(newData, key));
+                String oldData = AES.decrypt(peerServer.read(AES.encrypt(fileName, key)), key);
+
+                peerServer.write(AES.encrypt(fileName, key),
+                        AES.encrypt(oldData+newData, key));
             }
             System.out.println("Successfully updated the " + fileName + " data");
         }
