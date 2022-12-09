@@ -9,7 +9,6 @@ public interface Master extends Remote{
     public List<String> getPaths(String filename) throws RemoteException;
     public String getPath() throws IOException;
     public int registerPeer(String peerData) throws IOException;
-    public void maliciousCheck() throws IOException;
     public Map.Entry<String, SecretKey> read(String fileName, String uri) throws RemoteException;
     public Map.Entry<Set<String>, SecretKey> create(String fileName, String uri) throws RemoteException;
     public Map.Entry<Map.Entry<String, SecretKey>, Set<String>> write(String fileName, String uri) throws RemoteException;

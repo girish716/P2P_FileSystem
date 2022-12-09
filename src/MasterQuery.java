@@ -14,7 +14,7 @@ import java.util.concurrent.ScheduledExecutorService;
 public class MasterQuery extends UnicastRemoteObject implements Master
 {
     // lookup : Filename -> List of peers containing that file
-    private Map<String, Set<String>> lookup;
+    private static Map<String, Set<String>> lookup;
     // peers : Stores all the registered peers
     private Set<String> peers;
     // bin : to store what all files are deleted
@@ -22,7 +22,7 @@ public class MasterQuery extends UnicastRemoteObject implements Master
     // Permissions Hashmap to manage all the permissions related to a file
     private Map<String, Permissions> permissions;
     // Hashmap to manage encryption keys for each file
-    private Map<String, SecretKey> secretKeys;
+    private static Map<String, SecretKey> secretKeys;
     // Replication Factor fetched from property file
     private Integer replicaFactor;
 
@@ -393,8 +393,7 @@ public class MasterQuery extends UnicastRemoteObject implements Master
         return -1;
     }
 
-    @Override
-    public void maliciousCheck() throws IOException {
+    public static boolean maliciousCheck() throws IOException {
         executorService.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
@@ -404,7 +403,7 @@ public class MasterQuery extends UnicastRemoteObject implements Master
                             // connect with server
                             FDS peerServer =
                                     (FDS)Naming.lookup(peerPath);
-                            String fileData = peerServer.read(fileName);
+                            String fileData = peerServer.read(AES.encrypt(fileName, secretKeys.get(fileName)));
                             if(fileData==null){
                                 System.out.println("Malicious activity detected in the Master Server......");
                                 System.out.println("Exiting......");
@@ -417,6 +416,7 @@ public class MasterQuery extends UnicastRemoteObject implements Master
                 }
             }
         }, 0, 5, TimeUnit.SECONDS);
+        return true;
     }
 
 

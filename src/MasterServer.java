@@ -22,7 +22,7 @@ public class MasterServer {
             // Create an object of the interface
             // implementation class
             Master obj = new MasterQuery();
-
+            MasterQuery.maliciousCheck();
             // rmiregistry within the server JVM with
             // port number 1901
             LocateRegistry.createRegistry(Integer.parseInt(masterPORT));
