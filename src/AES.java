@@ -3,7 +3,11 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Base64;
 
 // Reference : https://www.section.io/engineering-education/implementing-aes-encryption-and-decryption-in-java/
@@ -14,6 +18,8 @@ public class AES {
     private final static int T_LEN = 128;
     private static Cipher encryptionCipher;
     private static Cipher decryptionCipher;
+    private static SecretKeySpec secretKey;
+    private static byte[] key;
 
     static {
         try {
@@ -24,9 +30,20 @@ public class AES {
         } catch (NoSuchPaddingException e) {
             throw new RuntimeException(e);
         }
-    }
+    };
 
-    ;
+    public static void setKey(final String secret_key) {
+        MessageDigest sha_var = null;
+        try {
+            key = secret_key.getBytes("UTF-8");
+            sha_var = MessageDigest.getInstance("SHA-1");
+            key = sha_var.digest(key);
+            key = Arrays.copyOf(key, 16);
+            secretKey = new SecretKeySpec(key, "AES");
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static SecretKey getSecretKey() throws Exception {
         KeyGenerator generator = KeyGenerator.getInstance("AES");
@@ -36,18 +53,31 @@ public class AES {
     }
 
     public static String encrypt(String message, SecretKey key) throws Exception {
-        byte[] messageInBytes = message.getBytes();
-        encryptionCipher.init(Cipher.ENCRYPT_MODE, key);
-        byte[] encryptedBytes = encryptionCipher.doFinal(messageInBytes);
-        return encode(encryptedBytes);
+        String secret = Base64.getEncoder().encodeToString(key.getEncoded());
+        try {
+            setKey(secret);
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            return Base64.getEncoder()
+                    .encodeToString(cipher.doFinal(message.getBytes("UTF-8")));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
-    public static String decrypt(String encryptedMessage, SecretKey key) throws Exception {
-        byte[] messageInBytes = decode(encryptedMessage);
-        GCMParameterSpec spec = new GCMParameterSpec(T_LEN, encryptionCipher.getIV());
-        decryptionCipher.init(Cipher.DECRYPT_MODE, key, spec);
-        byte[] decryptedBytes = decryptionCipher.doFinal(messageInBytes);
-        return new String(decryptedBytes);
+    public static String decrypt(String message, SecretKey key) throws Exception {
+        String secret = Base64.getEncoder().encodeToString(key.getEncoded());
+        try {
+            setKey(secret);
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE, secretKey);
+            return new String(cipher.doFinal(Base64.getDecoder()
+                    .decode(message)));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     private static String encode(byte[] data) {
