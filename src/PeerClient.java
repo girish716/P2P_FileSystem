@@ -41,6 +41,7 @@ public class PeerClient {
             for(String peerURI : peersURI){
                 FDS peerServer =
                         (FDS)Naming.lookup(peerURI);
+                System.out.println(AES.encrypt(fileName, key));
                 peerServer.create(AES.encrypt(fileName, key),
                                   AES.encrypt(fileData, key));
             }
@@ -67,14 +68,18 @@ public class PeerClient {
             // connect with server
             FDS peerServer =
                     (FDS)Naming.lookup(message);
+            System.out.println("Encrypted file name");
+            System.out.println(AES.encrypt(fileName, key));
             String fileData = peerServer.read(AES.encrypt(fileName, key));
             if(fileData==null){
                 System.out.println("Failed to read " + fileName);
+                return;
             }
+            System.out.println(fileData);
             System.out.println("File Data : \n"+ AES.decrypt(fileData, key));
         }
         catch(Exception e){
-            System.out.println(e);
+            e.printStackTrace();
         }
     }
 
@@ -106,7 +111,9 @@ public class PeerClient {
     }
     public void createDirectory(Master masterServer, String directoryName){
         try {
-            Set<String> peersURI = masterServer.create(directoryName, myURI);
+            Map.Entry<Set<String>, SecretKey> response = masterServer.create(directoryName, myURI);
+            Set<String> peersURI = response.getKey();
+            SecretKey key = response.getValue();
             if(peersURI == null) {
                 System.out.println(directoryName + " already exists");
                 return;
@@ -115,7 +122,7 @@ public class PeerClient {
             for(String peerURI : peersURI){
                 FDS peerServer =
                         (FDS)Naming.lookup(peerURI);
-                peerServer.createDirectory(directoryName);
+                peerServer.createDirectory(AES.encrypt(directoryName, key));
             }
             System.out.println("Successfully created " + directoryName);
         }
@@ -160,10 +167,10 @@ public class PeerClient {
                 return;
             }
 
-            // connect with server
-            FDS peerServer =
-                    (FDS)Naming.lookup(response);
-            peerServer.delete(fileName);
+//            // connect with server
+//            FDS peerServer =
+//                    (FDS)Naming.lookup(response);
+//            peerServer.delete(fileName);
             System.out.println("successfully deleted "+ fileName);
         }
         catch (Exception e){
@@ -181,9 +188,9 @@ public class PeerClient {
                 System.out.println("You don't have permission to delete/restore");
                 return;
             }
-            FDS peerServer =
-                    (FDS)Naming.lookup(response);
-            peerServer.restore(fileName);
+//            FDS peerServer =
+//                    (FDS)Naming.lookup(response);
+//            peerServer.restore(fileName);
             System.out.println(fileName + " Successfully Restored ");
         }
         catch (Exception e){

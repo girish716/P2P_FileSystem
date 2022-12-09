@@ -10,16 +10,10 @@ public interface Master extends Remote{
     public String getPath() throws IOException;
     public int registerPeer(String peerData) throws IOException;
     public void maliciousCheck() throws IOException;
-<<<<<<< Updated upstream
     public Map.Entry<String, SecretKey> read(String fileName, String uri) throws RemoteException;
     public Map.Entry<Set<String>, SecretKey> create(String fileName, String uri) throws RemoteException;
     public Map.Entry<Map.Entry<String, SecretKey>, Set<String>> write(String fileName, String uri) throws RemoteException;
-=======
-    public String read(String fileName, String uri) throws RemoteException;
-    public Set<String> create(String fileName, String uri) throws RemoteException;
     public Set<String> createDirectory(String fileName, String uri) throws RemoteException;
-    public Map.Entry<String, Set<String>> write(String fileName, String uri) throws RemoteException;
->>>>>>> Stashed changes
     public String delete(String fileName, String uri) throws RemoteException;
     public Map.Entry<Map.Entry<String, SecretKey>, Set<String>> update(String fileName, String uri) throws RemoteException;
     public String restore(String fileName, String uri) throws RemoteException;

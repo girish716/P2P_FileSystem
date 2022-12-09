@@ -13,6 +13,7 @@ public class PeerServer {
 
         try
         {
+            System.out.println("Peer Server started");
             Properties prop = new Properties();
             prop.load(new FileInputStream("../resources/config.properties"));
 
