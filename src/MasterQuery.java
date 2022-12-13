@@ -36,10 +36,10 @@ public class MasterQuery extends UnicastRemoteObject implements Master
         permissions = new HashMap<>();
         secretKeys = new HashMap<>();
         Properties prop = new Properties();
-        prop.load(new FileInputStream("../resources/config.properties"));
+//        prop.load(new FileInputStream("../resources/config.properties"));
         //Reading each property value
-        this.replicaFactor = Integer.parseInt(prop.getProperty("REPLICA_FACTOR"));
-
+        //this.replicaFactor = Integer.parseInt(prop.getProperty("REPLICA_FACTOR"));
+        this.replicaFactor = 3;
     }
 
 

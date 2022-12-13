@@ -74,9 +74,12 @@ public class BenchmarksFindings implements Runnable {
     @Override
     public void run() {
         System.out.println("Running for 10k create requests");
-        int maxRequests= 1000000;
+        int maxRequests= 10000;
         for(int request = 1; request<=maxRequests; request++){
-            this.client.createFile( ""+request+""+System.currentTimeMillis(), "Create DATA: "+request);
+            String filename = ""+request+""+System.currentTimeMillis();
+            this.client.createFile( filename, "Create DATA: "+request);
+            this.client.readFile( filename);
+            this.client.writeFile( filename,"New DATA: "+request );
         }
     }
 }

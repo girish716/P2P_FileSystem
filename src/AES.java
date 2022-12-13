@@ -53,7 +53,6 @@ public class AES {
     }
 
     public static String encrypt(String message, SecretKey key) throws Exception {
-        System.out.println("we are in encryption for "+message);
         String secret = Base64.getEncoder().encodeToString(key.getEncoded());
         try {
             setKey(secret);
@@ -61,7 +60,6 @@ public class AES {
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
             String response = Base64.getEncoder()
                     .encodeToString(cipher.doFinal(message.getBytes("UTF-8")));
-            System.out.println("printing response "+response);
             return response.replace("/", "1029");
         } catch (Exception e) {
             e.printStackTrace();
@@ -70,7 +68,6 @@ public class AES {
     }
 
     public static String decrypt(String message, SecretKey key) throws Exception {
-        System.out.println("we are in decryption for "+message);
         message = message.replace("1029","/");
         String secret = Base64.getEncoder().encodeToString(key.getEncoded());
         try {
@@ -107,8 +104,7 @@ public class AES {
             System.err.println("Encrypted Message2 : " + encryptedMessage2);
             String decryptedMessage2 = aes.decrypt(encryptedMessage2, key);
             System.err.println("Decrypted Message2 : " + decryptedMessage2);
-
-//            System.out.println(aes.encrypt("Girish", key));
+            
 
         } catch (Exception e) {
             e.printStackTrace();
