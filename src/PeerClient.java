@@ -1,4 +1,5 @@
 import javax.crypto.SecretKey;
+import java.io.File;
 import java.rmi.Naming;
 import java.util.*;
 import java.io.FileInputStream;
@@ -11,6 +12,8 @@ public class PeerClient {
     String serverIP;
     String myURI;
     Master masterServer;
+
+    HashMap<String, String> usersCredentials = new HashMap<>();
 
     PeerClient(){
         try{
@@ -230,15 +233,66 @@ public class PeerClient {
         }
     }
 
+    public void validateUser(String username, String password){
+        if(usersCredentials.containsKey(username)){
+            if(!password.equals(usersCredentials.get(username))){
+                System.out.println("invalid credentials: /n");
+                getUserDetails();
+            }
+        }else{
+            System.out.println("invalid credentials: /n");
+            getUserDetails();
+        }
+    }
+
+    public void getUserDetails(){
+        try{
+            Scanner sc = new Scanner(System.in);
+            System.out.println("Please login: /n");
+            System.out.println("username : ");
+            String username = sc.nextLine();
+            System.out.println("Password : ");
+            String password = sc.nextLine();
+            validateUser(username, password);
+            System.out.println("/n");
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void loadUsers(){
+        try{
+            File fileObj = new File("../resources/users.txt");
+            Scanner reader = new Scanner(fileObj);
+            String users[] = new String[2];
+            int i=0;
+            while (reader.hasNextLine()) {
+                String data = reader.nextLine();
+                users[i++] = data;
+            }
+            String usernames[] = users[0].split("=")[1].split(",");
+            String passwords[] = users[1].split("=")[1].split(",");
+            for(i=0;i<usernames.length;i++){
+                usersCredentials.put(usernames[i], passwords[i]);
+            }
+            reader.close();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
     public void run(){
         String response;
         int userInput;
-
+        Scanner sc = new Scanner(System.in);
+        loadUsers();
+        getUserDetails();
         try
         {
             System.out.println("Welcome to the Peer to Peer Distributed File System");
-
-            Scanner sc = new Scanner(System.in);
+            loadUsers();
             while(true){
                 System.out.println( "Please select one of the below options" + "\n" +
                         "1. Create file" + " " +
