@@ -10,6 +10,7 @@ public class PeerClient {
     String serverPORT;
     String serverIP;
     String myURI;
+    Master masterServer;
 
     PeerClient(){
         try{
@@ -21,13 +22,33 @@ public class PeerClient {
             this.serverPORT = prop.getProperty("SERVER_PORT");
             this.serverIP = prop.getProperty("SERVER_IP");
             this.myURI = "rmi://" + this.serverIP+":"+this.serverPORT + "/peer";
+            this.masterServer =
+                    (Master)Naming.lookup("rmi://"+this.masterIP+":"+this.masterPORT+"/master");
         }
         catch(Exception e){
             e.printStackTrace();
         }
     }
 
-    public void createFile(Master masterServer, String fileName, String fileData){
+    PeerClient(int clientID){
+        try{
+            Properties prop = new Properties();
+            prop.load(new FileInputStream("./resources/benchmark.properties"));
+            //Fetching each property value
+            this.masterPORT = prop.getProperty("MASTER_PORT");
+            this.masterIP = prop.getProperty("MASTER_IP");
+            this.serverPORT = prop.getProperty("SERVER_PORT_"+clientID);
+            this.serverIP = prop.getProperty("SERVER_IP_"+clientID);
+            this.myURI = "rmi://" + this.serverIP+":"+this.serverPORT + "/peer";
+            this.masterServer =
+                    (Master)Naming.lookup("rmi://"+this.masterIP+":"+this.masterPORT+"/master");
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void createFile(String fileName, String fileData){
         try{
             //fetch IP and PORT of random peer
             Map.Entry<Set<String>, SecretKey> response = masterServer.create(fileName, myURI);
@@ -52,7 +73,7 @@ public class PeerClient {
         }
     }
 
-    public void readFile(Master masterServer, String fileName){
+    public void readFile(String fileName){
         try{
             Map.Entry<String, SecretKey> response = masterServer.read(fileName, myURI);
             String message = response.getKey();
@@ -83,7 +104,7 @@ public class PeerClient {
         }
     }
 
-    public void updateFile(Master masterServer, String fileName, String newData){
+    public void updateFile(String fileName, String newData){
         try {
             Map.Entry<Map.Entry<String, SecretKey>, Set<String>> response = masterServer.update(fileName, myURI);
             String message = response.getKey().getKey();
@@ -111,7 +132,7 @@ public class PeerClient {
             System.out.println(e);
         }
     }
-    public void createDirectory(Master masterServer, String directoryName){
+    public void createDirectory(String directoryName){
         try {
             Map.Entry<Set<String>, SecretKey> response = masterServer.create(directoryName, myURI);
             Set<String> peersURI = response.getKey();
@@ -132,7 +153,7 @@ public class PeerClient {
             System.out.println(e);
         }
     }
-    public void writeFile(Master masterServer, String fileName, String data){
+    public void writeFile(String fileName, String data){
         try {
             Map.Entry<Map.Entry<String, SecretKey>, Set<String>> response = masterServer.update(fileName, myURI);
             String message = response.getKey().getKey();
@@ -158,7 +179,7 @@ public class PeerClient {
             System.out.println(e);
         }
     }
-    public void delete(Master masterServer, String fileName){
+    public void delete(String fileName){
         try{
             String response = masterServer.delete(fileName, myURI);
             if(response.equals(fileName + " doesn't exit")){
@@ -180,7 +201,7 @@ public class PeerClient {
         }
     }
 
-    public void restore(Master masterServer, String fileName){
+    public void restore(String fileName){
         try{
             String response = masterServer.restore(fileName, myURI);
             if(response.equals(fileName + " already exist")){
@@ -200,7 +221,7 @@ public class PeerClient {
         }
     }
 
-    public void delegatePermission(Master masterServer, String fileName, String otherURI, String permission) {
+    public void delegatePermission(String fileName, String otherURI, String permission) {
         try{
             String response = masterServer.delegatePermission(fileName, myURI, otherURI, permission);
             System.out.println(response);
@@ -210,17 +231,12 @@ public class PeerClient {
         }
     }
 
-    public static void main(String args[]) {
+    public void run(){
         String response;
         int userInput;
 
         try
         {
-            PeerClient clientServer = new PeerClient();
-
-            Master masterAccess =
-                    (Master)Naming.lookup("rmi://"+clientServer.masterIP+":"+clientServer.masterPORT+"/master");
-            System.out.println(masterAccess);
             System.out.println("Welcome to the Peer to Peer Distributed File System");
 
             Scanner sc = new Scanner(System.in);
@@ -248,36 +264,36 @@ public class PeerClient {
                     String fileName = sc.nextLine();
                     System.out.println("Enter File data - ");
                     String fileData = sc.nextLine();
-                    clientServer.createFile(masterAccess, fileName, fileData);
+                    this.createFile(fileName, fileData);
                 }
                 else if (userInput == 2) {
-                        System.out.println("Enter Directory name to be created - ");
-                        String directoryName = sc.nextLine();
-                        clientServer.createDirectory(masterAccess, directoryName);
+                    System.out.println("Enter Directory name to be created - ");
+                    String directoryName = sc.nextLine();
+                    this.createDirectory(directoryName);
                 } else if (userInput == 3){
                     System.out.println("Enter File name to read - ");
                     String fileName = sc.nextLine();
-                    clientServer.readFile(masterAccess, fileName);
+                    this.readFile(fileName);
                 } else if (userInput == 4){
                     System.out.println("Enter File name to be updated - ");
                     String fileName = sc.nextLine();
                     System.out.println("Enter the file data - ");
                     String fileData = sc.nextLine();
-                    clientServer.writeFile(masterAccess, fileName, fileData);
+                    this.writeFile(fileName, fileData);
                 } else if (userInput == 5){
                     System.out.println("Enter File name to be updated - ");
                     String fileName = sc.nextLine();
                     System.out.println("Enter new data to be appended - ");
                     String fileData = sc.nextLine();
-                    clientServer.updateFile(masterAccess, fileName, fileData);
+                    this.updateFile(fileName, fileData);
                 } else if (userInput == 6){
                     System.out.println("Enter File name to delete - ");
                     String fileName = sc.nextLine();
-                    clientServer.delete(masterAccess, fileName);
+                    this.delete(fileName);
                 } else if (userInput == 7){
                     System.out.println("Enter File name to restore - ");
                     String fileName = sc.nextLine();
-                    clientServer.restore(masterAccess, fileName);
+                    this.restore(fileName);
                 } else if(userInput == 8){
                     System.out.println("Enter file name to delegate the permission");
                     String fileName = sc.nextLine();
@@ -286,9 +302,9 @@ public class PeerClient {
                     uri = "rmi://" + uri +"/peer";
                     System.out.println("Enter permission i.e, read, write, delete");
                     String permission = sc.nextLine();
-                    clientServer.delegatePermission(masterAccess, fileName, uri, permission);
+                    this.delegatePermission(fileName, uri, permission);
                 } else if (userInput == 9){
-                    clientServer.displayHelp();
+                    this.displayHelp();
                 } else if (userInput == 10){
                     System.out.println("Exiting out of file distributed system");
                     break;
@@ -302,6 +318,10 @@ public class PeerClient {
         {
             System.out.println(ae);
         }
+    }
+
+    public static void main(String args[]) {
+        new PeerClient().run();
     }
 
     public void displayHelp() {

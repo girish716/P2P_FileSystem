@@ -5,7 +5,7 @@ import java.util.*;
 import java.io.FileInputStream;
 
 public class MasterServer {
-    public static void main(String args[]) {
+    public void run(String path){
         String masterPORT;
         String masterIP;
 
@@ -13,8 +13,8 @@ public class MasterServer {
         {
             Properties prop = new Properties();
             //ResourceBundle prop
-                  //  = ResourceBundle.getBundle("config.properties");
-            prop.load(new FileInputStream("../resources/config.properties"));
+            //  = ResourceBundle.getBundle("config.properties");
+            prop.load(new FileInputStream(path));
             //Reading each property value
             masterPORT = prop.getProperty("MASTER_PORT");
             masterIP = prop.getProperty("MASTER_IP");
@@ -23,6 +23,9 @@ public class MasterServer {
             // implementation class
             Master obj = new MasterQuery();
             MasterQuery.maliciousCheck();
+
+
+
             // rmiregistry within the server JVM with
             // port number 1901
             LocateRegistry.createRegistry(Integer.parseInt(masterPORT));
@@ -30,10 +33,14 @@ public class MasterServer {
             // Binds the remote object by the name
             // geeksforgeeks
             Naming.rebind("rmi://"+masterIP+":"+masterPORT+"/master",obj);
+            System.out.println("successfully started master server");
         }
         catch(Exception ae)
         {
             ae.printStackTrace();
         }
+    }
+    public static void main(String args[]) {
+        new MasterServer().run("../resources/config.properties");
     }
 }

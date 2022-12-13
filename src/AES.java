@@ -92,12 +92,12 @@ public class AES {
         try {
             AES aes = new AES();
             SecretKey key = aes.getSecretKey();
-            String encryptedMessage1 = aes.encrypt("Girish", key);
+            String encryptedMessage1 = aes.encrypt("1", key);
             String decryptedMessage1 = aes.decrypt(encryptedMessage1, key);
             System.err.println("Encrypted Message1 : " + encryptedMessage1);
             System.err.println("Decrypted Message1 : " + decryptedMessage1);
 
-            String encryptedMessage2 = aes.encrypt("Girish", key);
+            String encryptedMessage2 = aes.encrypt("2", key);
 
             System.err.println("Encrypted Message2 : " + encryptedMessage2);
             String decryptedMessage2 = aes.decrypt(encryptedMessage2, key);

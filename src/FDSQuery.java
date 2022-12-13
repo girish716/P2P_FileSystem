@@ -20,14 +20,15 @@ public class FDSQuery extends UnicastRemoteObject implements FDS
 
     // Default constructor to throw RemoteException
     // from its parent constructor
-    FDSQuery() throws IOException {
+    FDSQuery(String propFilePath) throws IOException {
         super();
         isDeleted = new HashMap<>();
         Properties prop = new Properties();
-        prop.load(new FileInputStream("../resources/config.properties"));
+        prop.load(new FileInputStream(propFilePath));
         //Reading each property value
         this.replicaFactor = Integer.parseInt(prop.getProperty("REPLICA_FACTOR"));
     }
+
 
     @Override
     public String read(String filename) throws Exception{
