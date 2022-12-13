@@ -233,28 +233,30 @@ public class PeerClient {
         }
     }
 
-    public void validateUser(String username, String password){
+    public boolean validateUser(String username, String password){
         if(usersCredentials.containsKey(username)){
             if(!password.equals(usersCredentials.get(username))){
-                System.out.println("invalid credentials: /n");
-                getUserDetails();
+                System.out.println("invalid credentials: \n");
+                return false;
             }
         }else{
-            System.out.println("invalid credentials: /n");
-            getUserDetails();
+            System.out.println("invalid credentials: \n");
+            return false;
         }
+        return true;
     }
 
     public void getUserDetails(){
         try{
             Scanner sc = new Scanner(System.in);
-            System.out.println("Please login: /n");
+            System.out.println("Please login: \n");
             System.out.println("username : ");
             String username = sc.nextLine();
             System.out.println("Password : ");
             String password = sc.nextLine();
-            validateUser(username, password);
-            System.out.println("/n");
+            if(validateUser(username, password)){
+                System.out.println("User Authorized");
+            }
         }
         catch (Exception e){
             e.printStackTrace();
@@ -289,10 +291,10 @@ public class PeerClient {
         Scanner sc = new Scanner(System.in);
         loadUsers();
         getUserDetails();
+
         try
         {
             System.out.println("Welcome to the Peer to Peer Distributed File System");
-            loadUsers();
             while(true){
                 System.out.println( "Please select one of the below options" + "\n" +
                         "1. Create file" + " " +
