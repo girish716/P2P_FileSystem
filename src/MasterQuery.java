@@ -84,6 +84,7 @@ public class MasterQuery extends UnicastRemoteObject implements Master
             permissions.put(fileName, permissionObj);
             lookup.put(fileName, peersURI);
             isDeleted.put(fileName, false);
+
             secretKeys.put(fileName, AES.getSecretKey());
             System.out.println(fileName + " data updated in the lookup table");
             return new AbstractMap.SimpleEntry<>(peersURI, secretKeys.get(fileName));
@@ -233,7 +234,7 @@ public class MasterQuery extends UnicastRemoteObject implements Master
             Map.Entry<Map.Entry<String, SecretKey>, Set<String>> response;
             String message = "";
             if(!hasFile(fileName)) {
-                message = fileName + " doesn't exit";
+                message = fileName + " doesn't exist";
                 return new AbstractMap.SimpleEntry<>(
                         new AbstractMap.SimpleEntry<>(message, null),
                         null);
