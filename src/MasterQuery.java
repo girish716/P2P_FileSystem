@@ -36,7 +36,7 @@ public class MasterQuery extends UnicastRemoteObject implements Master
         permissions = new HashMap<>();
         secretKeys = new HashMap<>();
         Properties prop = new Properties();
-        prop.load(new FileInputStream("./resources/config.properties"));
+        prop.load(new FileInputStream("../resources/config.properties"));
         //Reading each property value
         this.replicaFactor = Integer.parseInt(prop.getProperty("REPLICA_FACTOR"));
 
@@ -274,7 +274,7 @@ public class MasterQuery extends UnicastRemoteObject implements Master
                 return message;
             }
 
-            List<String> paths = getPaths(fileName);
+            List<String> paths = new ArrayList<>(lookup.get(fileName));
             String peerPath = paths.get(0);
             isDeleted.put(fileName, false);
             return peerPath;
@@ -405,11 +405,11 @@ public class MasterQuery extends UnicastRemoteObject implements Master
                             FDS peerServer =
                                     (FDS)Naming.lookup(peerPath);
                             String fileData = peerServer.read(AES.encrypt(fileName, secretKeys.get(fileName)));
-//                            if(fileData==null){
-//                                System.out.println("Malicious activity detected in the Master Server......");
-//                                System.out.println("Exiting......");
-//                                System.exit(1);
-//                            }
+                            if(fileData==null){
+                                System.out.println("Malicious activity detected in the Master Server......");
+                                System.out.println("Exiting......");
+                                System.exit(1);
+                            }
                         }
                     }
                 } catch (Exception e) {

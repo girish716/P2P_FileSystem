@@ -37,6 +37,8 @@ public class FDSQuery extends UnicastRemoteObject implements FDS
             public String call() throws Exception {
                 if(isDeleted.containsKey(filename) && !isDeleted.get(filename)){
                     try {
+                        File f = new File(filename);
+                        if(f.isDirectory()) return "";
                         return Files.readString(Path.of(filename));
                     } catch (IOException io){
                         io.printStackTrace();

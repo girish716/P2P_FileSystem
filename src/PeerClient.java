@@ -90,13 +90,11 @@ public class PeerClient {
             FDS peerServer =
                     (FDS)Naming.lookup(message);
             System.out.println("Encrypted file name");
-            System.out.println(AES.encrypt(fileName, key));
             String fileData = peerServer.read(AES.encrypt(fileName, key));
             if(fileData==null){
                 System.out.println("Failed to read " + fileName);
                 return;
             }
-            System.out.println(fileData);
             System.out.println("File Data : \n"+ AES.decrypt(fileData, key));
         }
         catch(Exception e){
@@ -204,6 +202,7 @@ public class PeerClient {
     public void restore(String fileName){
         try{
             String response = masterServer.restore(fileName, myURI);
+            System.out.println(response);
             if(response.equals(fileName + " already exist")){
                 System.out.println(response);
                 return;
@@ -249,7 +248,7 @@ public class PeerClient {
                         "5. Update file" + " " +
                         "6. Delete file" + " " +
                         "7. Restore file" + "\n" +
-                        "8. Delegate permissions" +
+                        "8. Delegate permissions " +
                         "9. Help" + " " +
                         "10. Exit"
                 );
